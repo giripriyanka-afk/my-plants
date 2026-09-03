@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
@@ -84,7 +85,17 @@ export default function PlantsApp() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto">
+        {/* flex-wrap rather than a fixed grid: the control count changes as
+            features land, and wrapping handles any number of them. */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Navigation, not an action, so it stays visually quieter than the
+              buttons beside it. */}
+          <Link
+            href="/about"
+            className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground"
+          >
+            About
+          </Link>
           <button
             type="button"
             onClick={() => setRoomsOpen(true)}
