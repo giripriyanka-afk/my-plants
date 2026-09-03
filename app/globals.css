@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
+
+  /* Light palette — the default. */
   --background: #ffffff;
   --foreground: #171717;
   --surface: #ffffff;
@@ -8,7 +11,6 @@
   --border: #e2e5e2;
   --muted: #64716a;
 
-  /* Care status palette. Chosen for contrast against --surface in both themes. */
   --status-overdue: #b42318;
   --status-overdue-bg: #fef3f2;
   --status-due: #b54708;
@@ -19,6 +21,27 @@
   --status-ok-bg: #ecfdf3;
   --status-never: #5d6b7a;
   --status-never-bg: #f2f4f7;
+
+  /* Dark palette values live here, once. Two different selectors have to apply
+     them (see below), and defining the hexes in a single place means a colour
+     is only ever edited in one spot. */
+  --dark-background: #0a0a0a;
+  --dark-foreground: #ededed;
+  --dark-surface: #161816;
+  --dark-surface-muted: #1e211f;
+  --dark-border: #2c302e;
+  --dark-muted: #9aa6a0;
+
+  --dark-status-overdue: #fda29b;
+  --dark-status-overdue-bg: #3b1512;
+  --dark-status-due: #fec84b;
+  --dark-status-due-bg: #3a2508;
+  --dark-status-soon: #84caff;
+  --dark-status-soon-bg: #0f2942;
+  --dark-status-ok: #75e0a7;
+  --dark-status-ok-bg: #0d2b1c;
+  --dark-status-never: #b3bdc9;
+  --dark-status-never-bg: #22262b;
 }
 
 @theme inline {
@@ -44,26 +67,61 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * Three theme states, and the selectors are what make them work:
+ *
+ *   data-theme="dark"   -> dark, whatever the OS says
+ *   data-theme="light"  -> light, whatever the OS says
+ *   no attribute        -> follow the OS
+ *
+ * The :not([data-theme="light"]) guard is the load-bearing part. Without it an
+ * explicit "light" choice would be overridden whenever the OS is in dark mode,
+ * so the toggle would appear broken in exactly one direction.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --surface: #161816;
-    --surface-muted: #1e211f;
-    --border: #2c302e;
-    --muted: #9aa6a0;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
 
-    --status-overdue: #fda29b;
-    --status-overdue-bg: #3b1512;
-    --status-due: #fec84b;
-    --status-due-bg: #3a2508;
-    --status-soon: #84caff;
-    --status-soon-bg: #0f2942;
-    --status-ok: #75e0a7;
-    --status-ok-bg: #0d2b1c;
-    --status-never: #b3bdc9;
-    --status-never-bg: #22262b;
+    --background: var(--dark-background);
+    --foreground: var(--dark-foreground);
+    --surface: var(--dark-surface);
+    --surface-muted: var(--dark-surface-muted);
+    --border: var(--dark-border);
+    --muted: var(--dark-muted);
+
+    --status-overdue: var(--dark-status-overdue);
+    --status-overdue-bg: var(--dark-status-overdue-bg);
+    --status-due: var(--dark-status-due);
+    --status-due-bg: var(--dark-status-due-bg);
+    --status-soon: var(--dark-status-soon);
+    --status-soon-bg: var(--dark-status-soon-bg);
+    --status-ok: var(--dark-status-ok);
+    --status-ok-bg: var(--dark-status-ok-bg);
+    --status-never: var(--dark-status-never);
+    --status-never-bg: var(--dark-status-never-bg);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: var(--dark-background);
+  --foreground: var(--dark-foreground);
+  --surface: var(--dark-surface);
+  --surface-muted: var(--dark-surface-muted);
+  --border: var(--dark-border);
+  --muted: var(--dark-muted);
+
+  --status-overdue: var(--dark-status-overdue);
+  --status-overdue-bg: var(--dark-status-overdue-bg);
+  --status-due: var(--dark-status-due);
+  --status-due-bg: var(--dark-status-due-bg);
+  --status-soon: var(--dark-status-soon);
+  --status-soon-bg: var(--dark-status-soon-bg);
+  --status-ok: var(--dark-status-ok);
+  --status-ok-bg: var(--dark-status-ok-bg);
+  --status-never: var(--dark-status-never);
+  --status-never-bg: var(--dark-status-never-bg);
 }
 
 body {
