@@ -47,6 +47,24 @@ export const LIGHT_LEVEL_LABEL: Readonly<Record<LightLevel, string>> =
     "low-light": "Low light",
   });
 
+/**
+ * v3. User-defined, so this is data rather than a union like LightLevel.
+ * Display order is array order — no separate `order` field to keep in sync.
+ */
+export interface Room {
+  id: string;
+  name: string;
+}
+
+/** Seeded once when a pre-v3 document is upgraded. Not a fixed list. */
+export const DEFAULT_ROOM_NAMES = [
+  "Living room",
+  "Master bedroom",
+  "Kitchen",
+  "Bathroom",
+  "Kids bedroom",
+] as const;
+
 export interface CareState {
   /** null means the action has never been recorded. */
   lastDone: IsoDay | null;
@@ -69,17 +87,20 @@ export interface Plant {
   careNotes: string;
   /** v2. */
   light: LightLevel;
-  /** v2. Short free text, e.g. "kitchen windowsill". */
+  /** v2. The exact spot within the room, e.g. "south-facing windowsill". */
   location: string;
+  /** v3. Points at a Room.id, or null for unassigned. */
+  roomId: string | null;
   createdAt: number;
   updatedAt: number;
 }
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** The shape persisted to localStorage and written by the export button. */
 export interface PlantsDocument {
   version: number;
+  rooms: Room[];
   plants: Plant[];
 }
 
@@ -92,6 +113,7 @@ export interface PlantsExport extends PlantsDocument {
 export interface PlantsSnapshot {
   readonly status: "hydrating" | "ready";
   readonly persistence: "ok" | "unavailable";
+  readonly rooms: readonly Room[];
   readonly plants: readonly Plant[];
   readonly lastError: string | null;
 }

@@ -7,17 +7,21 @@ import {
   MAX_LOCATION_LENGTH,
   MAX_NAME_LENGTH,
   MAX_PASSPORT_LENGTH,
+  MAX_ROOM_NAME_LENGTH,
+  MAX_ROOMS,
 } from "@/lib/constants";
 import { isIsoDay } from "@/lib/dates";
 import { newId } from "@/lib/id";
 import {
   CARE_ACTIONS,
+  DEFAULT_ROOM_NAMES,
   LIGHT_LEVELS,
   SCHEMA_VERSION,
   type CarePlan,
   type LightLevel,
   type Plant,
   type PlantsDocument,
+  type Room,
 } from "@/types/plant";
 
 /**
@@ -93,7 +97,35 @@ function coerceCarePlan(value: unknown): CarePlan {
 }
 
 /** Returns null for an entry with no usable name — the caller skips those. */
-function coercePlant(value: unknown, seenIds: Set<string>): Plant | null {
+function coerceRoom(value: unknown, seenIds: Set<string>): Room | null {
+  if (!isRecord(value)) return null;
+
+  const name = asString(value.name, MAX_ROOM_NAME_LENGTH).trim();
+  if (name.length === 0) return null;
+
+  const rawId =
+    typeof value.id === "string" && ID_RE.test(value.id) ? value.id : "";
+  const id = rawId.length > 0 && !seenIds.has(rawId) ? rawId : newId();
+  seenIds.add(id);
+
+  return { id, name };
+}
+
+export function createDefaultRooms(): Room[] {
+  return DEFAULT_ROOM_NAMES.map((name) => ({ id: newId(), name }));
+}
+
+/**
+ * Returns null for an entry with no usable name — the caller skips those.
+ * `roomIds` is the set of rooms that survived coercion; a roomId outside it is
+ * a dangling reference and becomes null (unassigned) rather than hiding the
+ * plant from every group on the list page.
+ */
+function coercePlant(
+  value: unknown,
+  seenIds: Set<string>,
+  roomIds: ReadonlySet<string>,
+): Plant | null {
   if (!isRecord(value)) return null;
 
   const name = asString(value.name, MAX_NAME_LENGTH).trim();
@@ -116,6 +148,10 @@ function coercePlant(value: unknown, seenIds: Set<string>): Plant | null {
     careNotes: asString(value.careNotes, MAX_CARE_NOTES_LENGTH),
     light: asLightLevel(value.light),
     location: asString(value.location, MAX_LOCATION_LENGTH).trim(),
+    roomId:
+      typeof value.roomId === "string" && roomIds.has(value.roomId)
+        ? value.roomId
+        : null,
     createdAt: asTimestamp(value.createdAt),
     updatedAt: asTimestamp(value.updatedAt),
   };
@@ -149,14 +185,37 @@ export function coercePlantsDocument(raw: string): Parsed<PlantsDocument> {
     };
   }
 
+  const sourceVersion =
+    typeof data.version === "number" && Number.isFinite(data.version)
+      ? data.version
+      : 1;
+
+  const roomIdPool = new Set<string>();
+  let rooms: Room[] = [];
+  if (Array.isArray(data.rooms)) {
+    for (const entry of data.rooms.slice(0, MAX_ROOMS)) {
+      const room = coerceRoom(entry, roomIdPool);
+      if (room) rooms.push(room);
+    }
+  }
+
+  // The one genuinely version-gated step, and the reason the policy note above
+  // exists. Seeding has to depend on where the document came from, not on
+  // whether `rooms` happens to be empty: a v3 user who deletes every room must
+  // get an empty list back, not the defaults resurrected on next load.
+  if (sourceVersion < SCHEMA_VERSION && !Array.isArray(data.rooms)) {
+    rooms = createDefaultRooms();
+    for (const room of rooms) roomIdPool.add(room.id);
+  }
+
   const seenIds = new Set<string>();
   const plants: Plant[] = [];
   for (const entry of data.plants) {
-    const plant = coercePlant(entry, seenIds);
+    const plant = coercePlant(entry, seenIds, roomIdPool);
     if (plant) plants.push(plant);
   }
 
-  return { ok: true, value: { version: SCHEMA_VERSION, plants } };
+  return { ok: true, value: { version: SCHEMA_VERSION, rooms, plants } };
 }
 
 /** Wraps coercePlantsDocument with messages aimed at the import button. */

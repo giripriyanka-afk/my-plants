@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
+import { usePlants } from "@/hooks/usePlants";
 import { clampInterval } from "@/lib/care";
 import {
   DEFAULT_INTERVAL_DAYS,
@@ -21,6 +22,12 @@ export interface PlantFormValues {
   name: string;
   description: string;
   intervals: Record<CareActionId, number>;
+  /**
+   * Room lives here rather than in the detail form: it decides which group a
+   * card appears under, so it belongs on the surface you reach from the list,
+   * where plants get placed in bulk.
+   */
+  roomId: string | null;
 }
 
 interface Props {
@@ -39,13 +46,16 @@ interface Props {
  * effect, and means an abandoned edit can't leak into the next one.
  */
 export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
+  const { snapshot } = usePlants();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const nameId = useId();
   const descriptionId = useId();
+  const roomSelectId = useId();
   const isNew = plant === null;
 
   const [name, setName] = useState(plant?.name ?? "");
   const [description, setDescription] = useState(plant?.description ?? "");
+  const [roomId, setRoomId] = useState<string | null>(plant?.roomId ?? null);
 
   // Held as text so the field can be cleared mid-typing without snapping back
   // to a clamped value. Clamped once, on submit.
@@ -73,6 +83,7 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
     onSave({
       name: trimmed,
       description,
+      roomId,
       intervals: Object.fromEntries(
         CARE_ACTIONS.map((action) => [
           action,
@@ -130,6 +141,23 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
         <p className="mt-1 text-xs text-muted">
           {description.length} / {MAX_DESCRIPTION_LENGTH}
         </p>
+
+        <label htmlFor={roomSelectId} className="mt-4 text-sm font-medium">
+          Room
+        </label>
+        <select
+          id={roomSelectId}
+          value={roomId ?? ""}
+          onChange={(event) => setRoomId(event.target.value || null)}
+          className="mt-1 min-h-11 w-full rounded-lg border border-border-subtle bg-background px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-status-soon"
+        >
+          <option value="">Unassigned</option>
+          {snapshot.rooms.map((room) => (
+            <option key={room.id} value={room.id}>
+              {room.name}
+            </option>
+          ))}
+        </select>
 
         {/* Shown for both add and edit — the pencil on a care row reopens this
             dialog rather than editing the schedule inline. */}

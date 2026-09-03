@@ -3,13 +3,20 @@ import {
   SCHEMA_VERSION,
   type Plant,
   type PlantsExport,
+  type Room,
 } from "@/types/plant";
 
-export function buildExportPayload(plants: readonly Plant[]): PlantsExport {
+export function buildExportPayload(
+  plants: readonly Plant[],
+  rooms: readonly Room[],
+): PlantsExport {
   return {
     app: "my-plants",
     version: SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
+    // Rooms travel with the plants, otherwise importing on another machine
+    // would drop every plant into Unassigned.
+    rooms: [...rooms],
     plants: [...plants],
   };
 }

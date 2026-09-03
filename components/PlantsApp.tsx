@@ -5,9 +5,10 @@ import { useRef, useState } from "react";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import PlantCard from "@/components/PlantCard";
 import PlantFormDialog from "@/components/PlantFormDialog";
+import RoomsDialog from "@/components/RoomsDialog";
 import { usePlants } from "@/hooks/usePlants";
 import { useToday } from "@/hooks/useToday";
-import { sortPlantsByUrgency } from "@/lib/care";
+import { groupPlantsByRoom } from "@/lib/rooms";
 import {
   buildExportPayload,
   downloadJson,
@@ -31,6 +32,7 @@ export default function PlantsApp() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Plant | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Plant | null>(null);
+  const [roomsOpen, setRoomsOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   // Only read once hydration has produced real data, so no date crosses the
@@ -39,7 +41,7 @@ export default function PlantsApp() {
 
   function handleExport() {
     downloadJson(
-      buildExportPayload(snapshot.plants),
+      buildExportPayload(snapshot.plants, snapshot.rooms),
       suggestedExportFilename(),
     );
   }
@@ -66,7 +68,9 @@ export default function PlantsApp() {
   }
 
   const isHydrating = snapshot.status === "hydrating";
-  const plants = isHydrating ? [] : sortPlantsByUrgency(snapshot.plants, today);
+  const groups = isHydrating
+    ? []
+    : groupPlantsByRoom(snapshot.plants, snapshot.rooms, today);
 
   return (
     <>
@@ -80,7 +84,14 @@ export default function PlantsApp() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:flex sm:w-auto">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <button
+            type="button"
+            onClick={() => setRoomsOpen(true)}
+            className="min-h-11 rounded-lg border border-border-subtle px-3 text-sm font-medium hover:bg-surface-muted"
+          >
+            Rooms
+          </button>
           <button
             type="button"
             onClick={handleExport}
@@ -155,7 +166,7 @@ export default function PlantsApp() {
         <div className={`${CARD_GRID} mt-6`} aria-hidden="true">
           <div className="h-56 animate-pulse rounded-xl bg-surface-muted" />
         </div>
-      ) : plants.length === 0 ? (
+      ) : groups.length === 0 ? (
         <div className="mt-10 rounded-xl border border-dashed border-border-subtle p-10 text-center">
           <p className="text-lg font-medium">No plants yet</p>
           <p className="mt-1 text-sm text-muted">
@@ -164,30 +175,47 @@ export default function PlantsApp() {
           </p>
         </div>
       ) : (
-        <div className={`${CARD_GRID} mt-6`}>
-          {plants.map((plant) => (
-            <PlantCard
-              key={plant.id}
-              plant={plant}
-              today={today}
-              onEdit={(target) => {
-                setEditing(target);
-                setFormOpen(true);
-              }}
-              onDelete={setPendingDelete}
-            />
-          ))}
-        </div>
+        // One section per room, in the user's room order, unassigned last.
+        // Empty rooms are dropped — a heading with nothing under it is noise.
+        groups.map(({ room, plants }) => (
+          <section key={room?.id ?? "unassigned"} className="mt-8">
+            <h2 className="flex items-baseline gap-2 text-sm font-semibold tracking-wide text-muted uppercase">
+              {room?.name ?? "Unassigned"}
+              <span className="text-xs font-normal normal-case tabular-nums">
+                {plants.length}
+              </span>
+            </h2>
+            <div className={`${CARD_GRID} mt-3`}>
+              {plants.map((plant) => (
+                <PlantCard
+                  key={plant.id}
+                  plant={plant}
+                  today={today}
+                  onEdit={(target) => {
+                    setEditing(target);
+                    setFormOpen(true);
+                  }}
+                  onDelete={setPendingDelete}
+                />
+              ))}
+            </div>
+          </section>
+        ))
       )}
 
       {formOpen && (
         <PlantFormDialog
           key={editing?.id ?? "new"}
           plant={editing}
-          onSave={({ name, description, intervals }) => {
+          onSave={({ name, description, intervals, roomId }) => {
             if (editing)
-              actions.updatePlant(editing.id, { name, description, intervals });
-            else actions.addPlant({ name, description, intervals });
+              actions.updatePlant(editing.id, {
+                name,
+                description,
+                intervals,
+                roomId,
+              });
+            else actions.addPlant({ name, description, intervals, roomId });
           }}
           onClose={() => {
             setFormOpen(false);
@@ -206,6 +234,8 @@ export default function PlantsApp() {
           onCancel={() => setPendingDelete(null)}
         />
       )}
+
+      {roomsOpen && <RoomsDialog onClose={() => setRoomsOpen(false)} />}
     </>
   );
 }
