@@ -124,6 +124,41 @@
   --status-never-bg: var(--dark-status-never-bg);
 }
 
+/*
+ * The switch's appearance is driven by the same three selectors as the palette,
+ * not by React state. The knob position and the visible icon are therefore
+ * painted with the page — no frame where the switch shows the wrong side while
+ * hydration catches up.
+ *
+ * Light is the default: sun visible, knob left.
+ */
+.theme-icon-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-icon-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .theme-icon-dark {
+    display: block;
+  }
+  :root:not([data-theme="light"]) .theme-knob {
+    /* Track is 3rem wide with 0.125rem padding; knob is 1.5rem. */
+    transform: translateX(1.25rem);
+  }
+}
+
+:root[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+:root[data-theme="dark"] .theme-icon-dark {
+  display: block;
+}
+:root[data-theme="dark"] .theme-knob {
+  transform: translateX(1.25rem);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
