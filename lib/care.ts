@@ -15,11 +15,18 @@ import {
 } from "@/types/plant";
 
 /** A fresh care plan with every action seeded at the default interval. */
-export function createCarePlan(): CarePlan {
+export function createCarePlan(
+  intervals?: Partial<Record<CareActionId, number>>,
+): CarePlan {
   return Object.fromEntries(
     CARE_ACTIONS.map((action) => [
       action,
-      { lastDone: null, intervalDays: DEFAULT_INTERVAL_DAYS },
+      {
+        lastDone: null,
+        intervalDays: clampInterval(
+          intervals?.[action] ?? DEFAULT_INTERVAL_DAYS,
+        ),
+      },
     ]),
   ) as CarePlan;
 }

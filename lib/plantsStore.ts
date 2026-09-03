@@ -4,6 +4,7 @@ import { newId } from "@/lib/id";
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from "@/lib/constants";
 import { loadDocument, saveDocument } from "@/lib/storage";
 import {
+  CARE_ACTIONS,
   SCHEMA_VERSION,
   type CareActionId,
   type Plant,
@@ -96,10 +97,19 @@ function mapPlant(
 }
 
 export interface PlantsActions {
-  addPlant(input: { name: string; description: string }): string;
+  addPlant(input: {
+    name: string;
+    description: string;
+    /** Chosen once at creation; omitted actions fall back to the default. */
+    intervals?: Partial<Record<CareActionId, number>>;
+  }): string;
   updatePlant(
     id: string,
-    patch: { name?: string; description?: string },
+    patch: {
+      name?: string;
+      description?: string;
+      intervals?: Partial<Record<CareActionId, number>>;
+    },
   ): void;
   deletePlant(id: string): void;
   /** Stamps today's date, overwriting whatever was there. No history is kept. */
@@ -116,14 +126,14 @@ export interface PlantsActions {
  * Note: setCareInterval, not setInterval — the latter shadows the global.
  */
 const actionsImpl: PlantsActions = {
-  addPlant({ name, description }) {
+  addPlant({ name, description, intervals }) {
     const id = newId();
     const now = Date.now();
     const plant: Plant = {
       id,
       name: name.trim().slice(0, MAX_NAME_LENGTH),
       description: description.slice(0, MAX_DESCRIPTION_LENGTH),
-      care: createCarePlan(),
+      care: createCarePlan(intervals),
       createdAt: now,
       updatedAt: now,
     };
@@ -132,18 +142,32 @@ const actionsImpl: PlantsActions = {
   },
 
   updatePlant(id, patch) {
-    mapPlant(id, (plant) => ({
-      ...plant,
-      name:
-        patch.name === undefined
-          ? plant.name
-          : patch.name.trim().slice(0, MAX_NAME_LENGTH),
-      description:
-        patch.description === undefined
-          ? plant.description
-          : patch.description.slice(0, MAX_DESCRIPTION_LENGTH),
-      updatedAt: Date.now(),
-    }));
+    mapPlant(id, (plant) => {
+      // lastDone is never touched here — only the schedule changes.
+      const care = { ...plant.care };
+      for (const action of CARE_ACTIONS) {
+        const days = patch.intervals?.[action];
+        if (days !== undefined) {
+          care[action] = {
+            ...care[action],
+            intervalDays: clampInterval(days),
+          };
+        }
+      }
+      return {
+        ...plant,
+        name:
+          patch.name === undefined
+            ? plant.name
+            : patch.name.trim().slice(0, MAX_NAME_LENGTH),
+        description:
+          patch.description === undefined
+            ? plant.description
+            : patch.description.slice(0, MAX_DESCRIPTION_LENGTH),
+        care,
+        updatedAt: Date.now(),
+      };
+    });
   },
 
   deletePlant(id) {
