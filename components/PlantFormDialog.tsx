@@ -2,13 +2,31 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
-import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from "@/lib/constants";
-import type { Plant } from "@/types/plant";
+import { clampInterval } from "@/lib/care";
+import {
+  DEFAULT_INTERVAL_DAYS,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_INTERVAL_DAYS,
+  MAX_NAME_LENGTH,
+  MIN_INTERVAL_DAYS,
+} from "@/lib/constants";
+import {
+  CARE_ACTIONS,
+  CARE_ACTION_META,
+  type CareActionId,
+  type Plant,
+} from "@/types/plant";
+
+export interface PlantFormValues {
+  name: string;
+  description: string;
+  intervals: Record<CareActionId, number>;
+}
 
 interface Props {
   /** null = adding a new plant; a Plant = editing that one. */
   plant: Plant | null;
-  onSave: (values: { name: string; description: string }) => void;
+  onSave: (values: PlantFormValues) => void;
   onClose: () => void;
 }
 
@@ -24,9 +42,22 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const nameId = useId();
   const descriptionId = useId();
+  const isNew = plant === null;
 
   const [name, setName] = useState(plant?.name ?? "");
   const [description, setDescription] = useState(plant?.description ?? "");
+
+  // Held as text so the field can be cleared mid-typing without snapping back
+  // to a clamped value. Clamped once, on submit.
+  const [intervalText, setIntervalText] = useState<Record<CareActionId, string>>(
+    () =>
+      Object.fromEntries(
+        CARE_ACTIONS.map((action) => [
+          action,
+          String(plant?.care[action].intervalDays ?? DEFAULT_INTERVAL_DAYS),
+        ]),
+      ) as Record<CareActionId, string>,
+  );
 
   useEffect(() => {
     // showModal(), not the `open` attribute — the attribute alone renders a
@@ -38,7 +69,17 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
     event.preventDefault();
     const trimmed = name.trim();
     if (trimmed.length === 0) return;
-    onSave({ name: trimmed, description });
+
+    onSave({
+      name: trimmed,
+      description,
+      intervals: Object.fromEntries(
+        CARE_ACTIONS.map((action) => [
+          action,
+          clampInterval(Number(intervalText[action])),
+        ]),
+      ) as Record<CareActionId, number>,
+    });
     onClose();
   }
 
@@ -48,14 +89,14 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
       onClose={onClose}
       className="m-0 w-full max-w-none border-0 bg-transparent p-0 backdrop:bg-black/50 sm:m-auto sm:w-[min(32rem,calc(100vw-2rem))]"
     >
-      {/* max-sm:mt-auto pins the sheet to the bottom edge on a phone, where a
+      {/* mt-auto pins the sheet to the bottom edge on a phone, where a
           top-layer dialog is otherwise centred by margin:auto. */}
       <form
         onSubmit={handleSubmit}
         className="mt-auto flex max-h-[85dvh] flex-col overflow-y-auto rounded-t-2xl border border-border-subtle bg-surface p-5 text-foreground shadow-xl sm:rounded-2xl"
       >
         <h2 className="text-lg font-semibold">
-          {plant ? "Edit plant" : "Add a plant"}
+          {isNew ? "Add a plant" : "Edit plant"}
         </h2>
 
         <label htmlFor={nameId} className="mt-4 text-sm font-medium">
@@ -90,6 +131,49 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
           {description.length} / {MAX_DESCRIPTION_LENGTH}
         </p>
 
+        {/* Shown for both add and edit — the pencil on a care row reopens this
+            dialog rather than editing the schedule inline. */}
+        <fieldset className="mt-4 border-0 p-0">
+          <legend className="text-sm font-medium">How often?</legend>
+          <p className="mt-0.5 text-xs text-muted">
+            Days between each action.
+          </p>
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {CARE_ACTIONS.map((action) => {
+              const meta = CARE_ACTION_META[action];
+              return (
+                <label
+                  key={action}
+                  className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-border-subtle px-3 py-1.5"
+                >
+                  <span className="flex min-w-0 items-center gap-2 text-sm">
+                    <span aria-hidden="true">{meta.emoji}</span>
+                    <span className="truncate">{meta.label}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={MIN_INTERVAL_DAYS}
+                      max={MAX_INTERVAL_DAYS}
+                      value={intervalText[action]}
+                      onChange={(event) =>
+                        setIntervalText((current) => ({
+                          ...current,
+                          [action]: event.target.value,
+                        }))
+                      }
+                      aria-label={`${meta.label} every N days`}
+                      className="w-14 rounded-md border border-border-subtle bg-background px-2 py-1 text-center text-base tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-status-soon"
+                    />
+                    <span className="text-xs text-muted">days</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
@@ -103,7 +187,7 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
             disabled={name.trim().length === 0}
             className="min-h-11 rounded-lg bg-foreground px-4 text-sm font-semibold text-background disabled:opacity-40"
           >
-            {plant ? "Save changes" : "Add plant"}
+            {isNew ? "Add plant" : "Save changes"}
           </button>
         </div>
       </form>

@@ -15,7 +15,9 @@ import {
 import { parsePlantsFile } from "@/lib/validate";
 import type { Plant } from "@/types/plant";
 
-const CARD_GRID = "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3";
+// Wide cards: each care row has to hold emoji, label, badge, interval and
+// button on one line, which a three-up grid cannot give it.
+const CARD_GRID = "grid grid-cols-1 gap-4 xl:grid-cols-2";
 
 /**
  * The single "use client" boundary. Everything it imports joins the client
@@ -191,9 +193,10 @@ export default function PlantsApp() {
         <PlantFormDialog
           key={editing?.id ?? "new"}
           plant={editing}
-          onSave={(values) => {
-            if (editing) actions.updatePlant(editing.id, values);
-            else actions.addPlant(values);
+          onSave={({ name, description, intervals }) => {
+            if (editing)
+              actions.updatePlant(editing.id, { name, description, intervals });
+            else actions.addPlant({ name, description, intervals });
           }}
           onClose={() => {
             setFormOpen(false);
