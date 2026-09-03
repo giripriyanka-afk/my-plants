@@ -45,12 +45,15 @@ export default function PlantCard({ plant, today, onEdit, onDelete }: Props) {
   ).length;
 
   return (
-    <article className="flex flex-col rounded-xl border border-border-subtle bg-surface p-4 sm:p-5">
+    /* The whole card navigates, but the card itself is NOT an anchor — wrapping
+       it would nest Edit, Delete, the Care toggle and four Done buttons inside
+       a link, which breaks keyboard navigation and screen readers. Instead the
+       name stays the one real link and its ::after overlay stretches across the
+       card. Everything else interactive is lifted above that overlay with
+       `relative z-10`, so it keeps its own click. */
+    <article className="group relative flex flex-col rounded-xl border border-border-subtle bg-surface p-4 transition-colors hover:border-muted focus-within:ring-2 focus-within:ring-status-soon sm:p-5">
       <header className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          {/* Only the name is the link. The card holds four Done buttons plus
-              Edit and Delete, so wrapping the whole thing in an anchor would
-              nest interactive elements. */}
           {/* The dot sits inline in the text flow, not as a flex sibling. Its
               wrapper is exactly one line box tall (h-7 == text-lg's 1.75rem
               line-height) and centres the dot inside it, so the dot lands on
@@ -61,7 +64,7 @@ export default function PlantCard({ plant, today, onEdit, onDelete }: Props) {
             </span>
             <Link
               href={`/plants/${encodeURIComponent(plant.id)}`}
-              className="rounded outline-none hover:underline focus-visible:ring-2 focus-visible:ring-status-soon"
+              className="rounded outline-none after:absolute after:inset-0 after:content-[''] group-hover:underline focus-visible:underline"
             >
               {plant.name}
             </Link>
@@ -72,7 +75,8 @@ export default function PlantCard({ plant, today, onEdit, onDelete }: Props) {
             </p>
           )}
         </div>
-        <div className="flex shrink-0 gap-1">
+        {/* relative z-10 keeps these above the name link's overlay. */}
+        <div className="relative z-10 flex shrink-0 gap-1">
           <button
             type="button"
             onClick={() => onEdit(plant)}
@@ -97,7 +101,7 @@ export default function PlantCard({ plant, today, onEdit, onDelete }: Props) {
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="mt-3 flex min-h-11 w-full items-center justify-between rounded-lg px-2 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground"
+        className="relative z-10 mt-3 flex min-h-11 w-full items-center justify-between rounded-lg px-2 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground"
       >
         <span>Care</span>
         <Chevron open={open} />
@@ -106,7 +110,7 @@ export default function PlantCard({ plant, today, onEdit, onDelete }: Props) {
       {/* Rendered even while collapsed and hidden with the `hidden` attribute,
           so aria-controls always points at a real element. One row per action,
           driven off the CARE_ACTIONS tuple rather than four hardcoded copies. */}
-      <div id={panelId} hidden={!open} className="mt-1">
+      <div id={panelId} hidden={!open} className="relative z-10 mt-1">
         {CARE_ACTIONS.map((action) => (
           <CareActionRow
             key={action}
