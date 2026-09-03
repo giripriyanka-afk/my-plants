@@ -9,6 +9,9 @@ export const DUE_SOON_WINDOW_DAYS = 3;
 
 export const MAX_NAME_LENGTH = 80;
 export const MAX_DESCRIPTION_LENGTH = 2000;
+export const MAX_PASSPORT_LENGTH = 500;
+export const MAX_CARE_NOTES_LENGTH = 2000;
+export const MAX_LOCATION_LENGTH = 80;
 
 /** Guards against JSON.parse freezing the tab on an accidentally huge file. */
 export const MAX_IMPORT_BYTES = 5 * 1024 * 1024;

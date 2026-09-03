@@ -1,16 +1,21 @@
 import { clampInterval, createCarePlan } from "@/lib/care";
 import {
   DEFAULT_INTERVAL_DAYS,
+  MAX_CARE_NOTES_LENGTH,
   MAX_DESCRIPTION_LENGTH,
   MAX_IMPORT_BYTES,
+  MAX_LOCATION_LENGTH,
   MAX_NAME_LENGTH,
+  MAX_PASSPORT_LENGTH,
 } from "@/lib/constants";
 import { isIsoDay } from "@/lib/dates";
 import { newId } from "@/lib/id";
 import {
   CARE_ACTIONS,
+  LIGHT_LEVELS,
   SCHEMA_VERSION,
   type CarePlan,
+  type LightLevel,
   type Plant,
   type PlantsDocument,
 } from "@/types/plant";
@@ -23,6 +28,18 @@ import {
  * Fields are read explicitly rather than spread, so unknown keys from the input
  * are never copied onto a Plant. That also makes __proto__/constructor keys a
  * non-issue: they are simply never read.
+ *
+ * Migration policy: new schema fields are defaulted per-field here, not in a
+ * separate version-gated migrate() pass. Two reasons. A version gate would skip
+ * repair on a document that already claims the current version but holds a bad
+ * value — and this coercer runs on every localStorage read, where that is a real
+ * case. And nothing so far needs deriving: every v2 field's "absent" meaning is
+ * exactly its "user hasn't set it" default.
+ *
+ * That holds only while absent == unset. A future field whose value must be
+ * computed from older data (splitting a field, changing units) needs a real
+ * version-gated step ahead of this coercer — and this coercer must still
+ * validate that step's output.
  */
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -40,6 +57,21 @@ function asTimestamp(value: unknown): number {
     ? value
     : Date.now();
 }
+
+function asLightLevel(value: unknown): LightLevel {
+  // The cast is needed because includes() narrows its argument to the union.
+  return typeof value === "string" &&
+    (LIGHT_LEVELS as readonly string[]).includes(value)
+    ? (value as LightLevel)
+    : "unspecified";
+}
+
+/**
+ * Ids are URL path segments as of v2, so an imported id has to be safe in one.
+ * Without this, a file carrying `"id": "a/b#c"` produces an unreachable detail
+ * page. newId() output already matches, so no existing id is disturbed.
+ */
+const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
 function coerceCarePlan(value: unknown): CarePlan {
   const plan = createCarePlan();
@@ -67,15 +99,23 @@ function coercePlant(value: unknown, seenIds: Set<string>): Plant | null {
   const name = asString(value.name, MAX_NAME_LENGTH).trim();
   if (name.length === 0) return null;
 
-  const rawId = typeof value.id === "string" ? value.id : "";
+  const rawId =
+    typeof value.id === "string" && ID_RE.test(value.id) ? value.id : "";
   const id = rawId.length > 0 && !seenIds.has(rawId) ? rawId : newId();
   seenIds.add(id);
 
+  // A v1 plant has none of the v2 keys, so each falls through to its default.
+  // That absence IS the migration.
   return {
     id,
     name,
     description: asString(value.description, MAX_DESCRIPTION_LENGTH),
     care: coerceCarePlan(value.care),
+    purchasedOn: isIsoDay(value.purchasedOn) ? value.purchasedOn : null,
+    passport: asString(value.passport, MAX_PASSPORT_LENGTH),
+    careNotes: asString(value.careNotes, MAX_CARE_NOTES_LENGTH),
+    light: asLightLevel(value.light),
+    location: asString(value.location, MAX_LOCATION_LENGTH).trim(),
     createdAt: asTimestamp(value.createdAt),
     updatedAt: asTimestamp(value.updatedAt),
   };

@@ -1,7 +1,7 @@
 "use client";
 
-import { computeCareStatus, type DueStatus } from "@/lib/care";
-import { formatIsoDay } from "@/lib/dates";
+import CareBadge from "@/components/CareBadge";
+import { computeCareStatus } from "@/lib/care";
 import { usePlants } from "@/hooks/usePlants";
 import {
   CARE_ACTION_META,
@@ -9,26 +9,6 @@ import {
   type CareState,
   type IsoDay,
 } from "@/types/plant";
-
-const BADGE_CLASS: Record<DueStatus, string> = {
-  never: "bg-status-never-bg text-status-never",
-  overdue: "bg-status-overdue-bg text-status-overdue",
-  due: "bg-status-due-bg text-status-due",
-  soon: "bg-status-soon-bg text-status-soon",
-  ok: "bg-status-ok-bg text-status-ok",
-};
-
-/** Kept short so the whole row fits on one line down to phone width. */
-function badgeText(
-  status: DueStatus,
-  daysUntilDue: number | null,
-  dueDate: IsoDay | null,
-): string {
-  if (status === "never" || dueDate === null) return "Never";
-  if (status === "due") return "Due today";
-  if (status === "overdue") return `Overdue ${-(daysUntilDue ?? 0)}d`;
-  return `Due in ${daysUntilDue}d`;
-}
 
 interface Props {
   plantId: string;
@@ -42,12 +22,6 @@ export default function CareActionRow({ plantId, action, care, today }: Props) {
   const meta = CARE_ACTION_META[action];
   const status = computeCareStatus(action, care, today);
 
-  const title = status.lastDone
-    ? `${meta.pastLabel} ${formatIsoDay(status.lastDone)}${
-        status.dueDate ? ` · due ${formatIsoDay(status.dueDate)}` : ""
-      }`
-    : `Never ${meta.pastLabel.toLowerCase()}`;
-
   return (
     // One line at every width: nothing wraps, and the label is the only part
     // allowed to shrink.
@@ -59,12 +33,7 @@ export default function CareActionRow({ plantId, action, care, today }: Props) {
         {meta.label}
       </span>
 
-      <span
-        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_CLASS[status.status]}`}
-        title={title}
-      >
-        {badgeText(status.status, status.daysUntilDue, status.dueDate)}
-      </span>
+      <CareBadge status={status} />
 
       <span className="shrink-0 text-xs whitespace-nowrap text-muted tabular-nums">
         every {care.intervalDays}d
