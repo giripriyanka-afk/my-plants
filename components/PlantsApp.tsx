@@ -81,7 +81,7 @@ export default function PlantsApp() {
           <p className="text-sm text-muted">
             {isHydrating
               ? " "
-              : `${snapshot.plants.length} ${snapshot.plants.length === 1 ? "plant" : "plants"} · saved in this browser`}
+              : `${snapshot.plants.length} ${snapshot.plants.length === 1 ? "plant" : "plants"} in your home. The more green, the better!`}
           </p>
         </div>
 
@@ -131,7 +131,7 @@ export default function PlantsApp() {
               setEditing(null);
               setFormOpen(true);
             }}
-            className="min-h-11 rounded-lg bg-foreground px-4 text-sm font-semibold text-background"
+            className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-foreground"
           >
             Add plant
           </button>

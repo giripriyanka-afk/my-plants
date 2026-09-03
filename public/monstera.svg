@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+  <!--
+    Stylised monstera deliciosa leaf, used as a CSS mask (see globals.css), so
+    only the alpha channel matters — the fill colour here is irrelevant and the
+    palette supplies the real one.
+
+    The blade is one outline; the characteristic side splits and fenestrations
+    are cut out through a mask rather than being drawn as separate shapes, so
+    the result is a single clean silhouette with real holes in it.
+  -->
+  <defs>
+    <mask id="cuts" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="240">
+      <rect width="200" height="240" fill="#fff"/>
+
+      <!-- Side splits, angling up and outward from the leaf edge. -->
+      <path d="M8 92 L72 104 L10 116 Z" fill="#000"/>
+      <path d="M12 138 L78 148 L18 160 Z" fill="#000"/>
+      <path d="M26 182 L82 188 L36 200 Z" fill="#000"/>
+      <path d="M192 92 L128 104 L190 116 Z" fill="#000"/>
+      <path d="M188 138 L122 148 L182 160 Z" fill="#000"/>
+      <path d="M174 182 L118 188 L164 200 Z" fill="#000"/>
+
+      <!-- Upper notches, shallower where the blade narrows to the tip. -->
+      <path d="M54 46 L94 64 L50 66 Z" fill="#000"/>
+      <path d="M146 46 L106 64 L150 66 Z" fill="#000"/>
+
+      <!-- Fenestrations either side of the midrib. -->
+      <ellipse cx="78" cy="120" rx="8" ry="15" transform="rotate(-14 78 120)" fill="#000"/>
+      <ellipse cx="122" cy="120" rx="8" ry="15" transform="rotate(14 122 120)" fill="#000"/>
+      <ellipse cx="82" cy="166" rx="7" ry="12" transform="rotate(-10 82 166)" fill="#000"/>
+      <ellipse cx="118" cy="166" rx="7" ry="12" transform="rotate(10 118 166)" fill="#000"/>
+    </mask>
+  </defs>
+
+  <g fill="#000">
+    <path
+      mask="url(#cuts)"
+      d="M100 8
+         C140 38 176 78 184 122
+         C190 156 172 196 136 216
+         C124 223 110 227 100 227
+         C90 227 76 223 64 216
+         C28 196 10 156 16 122
+         C24 78 60 38 100 8 Z"/>
+    <!-- Petiole. -->
+    <path d="M96 222 C96 230 95 236 92 240 L108 240 C105 236 104 230 104 222 Z"/>
+  </g>
+</svg>

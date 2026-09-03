@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import CareBadge from "@/components/CareBadge";
 import { computeCareStatus } from "@/lib/care";
@@ -42,7 +42,7 @@ export default function CareActionRow({ plantId, action, care, today }: Props) {
       <button
         type="button"
         onClick={() => actions.markCareDone(plantId, action)}
-        className="min-h-11 shrink-0 rounded-lg bg-foreground px-3 text-xs font-semibold text-background sm:min-h-9"
+        className="min-h-11 shrink-0 rounded-lg bg-accent px-3 text-xs font-semibold text-accent-foreground sm:min-h-9"
       >
         Done
       </button>

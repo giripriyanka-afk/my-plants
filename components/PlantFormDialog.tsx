@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -213,7 +213,7 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
           <button
             type="submit"
             disabled={name.trim().length === 0}
-            className="min-h-11 rounded-lg bg-foreground px-4 text-sm font-semibold text-background disabled:opacity-40"
+            className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-foreground disabled:opacity-40"
           >
             {isNew ? "Add plant" : "Save changes"}
           </button>
