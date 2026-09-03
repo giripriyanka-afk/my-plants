@@ -3,45 +3,59 @@
 :root {
   color-scheme: light;
 
-  /* Light palette — the default. */
-  --background: #ffffff;
-  --foreground: #171717;
-  --surface: #ffffff;
-  --surface-muted: #f6f7f6;
-  --border: #e2e5e2;
-  --muted: #64716a;
+  /* Light: warm off-white with a green cast, charcoal text, moss accent. */
+  --background: #f6f8f3;
+  --foreground: #242b26;
+  --surface: #fdfefc;
+  --surface-muted: #ebf0e5;
+  --border: #d7dfcf;
+  --muted: #66735f;
 
-  --status-overdue: #b42318;
-  --status-overdue-bg: #fef3f2;
-  --status-due: #b54708;
-  --status-due-bg: #fffaeb;
-  --status-soon: #175cd3;
-  --status-soon-bg: #eff8ff;
-  --status-ok: #067647;
-  --status-ok-bg: #ecfdf3;
-  --status-never: #5d6b7a;
-  --status-never-bg: #f2f4f7;
+  /* Moss green carries the primary actions. It is a separate token from
+     --foreground so text stays charcoal while buttons read green. */
+  --accent: #52703f;
+  --accent-foreground: #f6f8f3;
+
+  /* The monstera backdrop. Alpha is deliberately tiny — it has to sit under
+     body text without touching contrast. */
+  --leaf: rgb(82 112 63 / 0.09);
+
+  --status-overdue: #a3341f;
+  --status-overdue-bg: #fbeeea;
+  --status-due: #8f5a12;
+  --status-due-bg: #fbf3e3;
+  --status-soon: #2a5a7a;
+  --status-soon-bg: #eaf2f7;
+  --status-ok: #3d6b3a;
+  --status-ok-bg: #eaf2e6;
+  --status-never: #5f6b62;
+  --status-never-bg: #edf0ec;
 
   /* Dark palette values live here, once. Two different selectors have to apply
      them (see below), and defining the hexes in a single place means a colour
      is only ever edited in one spot. */
-  --dark-background: #0a0a0a;
-  --dark-foreground: #ededed;
-  --dark-surface: #161816;
-  --dark-surface-muted: #1e211f;
-  --dark-border: #2c302e;
-  --dark-muted: #9aa6a0;
+  --dark-background: #151815;
+  --dark-foreground: #e4e9df;
+  --dark-surface: #1e231e;
+  --dark-surface-muted: #272d26;
+  --dark-border: #363d34;
+  --dark-muted: #9aa694;
 
-  --dark-status-overdue: #fda29b;
-  --dark-status-overdue-bg: #3b1512;
-  --dark-status-due: #fec84b;
-  --dark-status-due-bg: #3a2508;
-  --dark-status-soon: #84caff;
-  --dark-status-soon-bg: #0f2942;
-  --dark-status-ok: #75e0a7;
-  --dark-status-ok-bg: #0d2b1c;
-  --dark-status-never: #b3bdc9;
-  --dark-status-never-bg: #22262b;
+  --dark-accent: #8fb572;
+  --dark-accent-foreground: #151815;
+
+  --dark-leaf: rgb(143 181 114 / 0.07);
+
+  --dark-status-overdue: #f2a196;
+  --dark-status-overdue-bg: #3a1a14;
+  --dark-status-due: #e8bd6d;
+  --dark-status-due-bg: #362610;
+  --dark-status-soon: #8fc0dd;
+  --dark-status-soon-bg: #172b36;
+  --dark-status-ok: #9ccb87;
+  --dark-status-ok-bg: #1d2c1a;
+  --dark-status-never: #b0bba9;
+  --dark-status-never-bg: #23291f;
 }
 
 @theme inline {
@@ -51,6 +65,8 @@
   --color-surface-muted: var(--surface-muted);
   --color-border-subtle: var(--border);
   --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
   --color-status-overdue: var(--status-overdue);
   --color-status-overdue-bg: var(--status-overdue-bg);
@@ -76,7 +92,7 @@
  *
  * The :not([data-theme="light"]) guard is the load-bearing part. Without it an
  * explicit "light" choice would be overridden whenever the OS is in dark mode,
- * so the toggle would appear broken in exactly one direction.
+ * so the switch would appear broken in exactly one direction.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -88,6 +104,9 @@
     --surface-muted: var(--dark-surface-muted);
     --border: var(--dark-border);
     --muted: var(--dark-muted);
+    --accent: var(--dark-accent);
+    --accent-foreground: var(--dark-accent-foreground);
+    --leaf: var(--dark-leaf);
 
     --status-overdue: var(--dark-status-overdue);
     --status-overdue-bg: var(--dark-status-overdue-bg);
@@ -111,6 +130,9 @@
   --surface-muted: var(--dark-surface-muted);
   --border: var(--dark-border);
   --muted: var(--dark-muted);
+  --accent: var(--dark-accent);
+  --accent-foreground: var(--dark-accent-foreground);
+  --leaf: var(--dark-leaf);
 
   --status-overdue: var(--dark-status-overdue);
   --status-overdue-bg: var(--dark-status-overdue-bg);
@@ -159,12 +181,67 @@
   transform: translateX(1.25rem);
 }
 
-body {
+/* Background lives on <html> rather than <body> so that body's negative
+   z-index pseudo-elements below paint above it and stay visible. */
+html {
   background: var(--background);
+}
+
+body {
   color: var(--foreground);
   /* Was `Arial, Helvetica, sans-serif`, which silently defeated the Geist
      fonts that layout.tsx loads. --font-sans is wired to it in @theme inline. */
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Monstera backdrop: two oversized leaves bleeding off opposite corners.
+ *
+ * The SVG is used as a mask rather than an <img>, with --leaf as the fill, so
+ * one file serves both themes and the colour follows the palette instead of
+ * being baked in. fixed + pointer-events:none + z-index:-1 keeps it out of the
+ * layout and out of every hit test.
+ */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--leaf);
+  -webkit-mask-image: url("/monstera.svg");
+  mask-image: url("/monstera.svg");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+body::before {
+  top: -7rem;
+  right: -9rem;
+  width: 30rem;
+  height: 36rem;
+  rotate: 18deg;
+}
+
+body::after {
+  bottom: -11rem;
+  left: -10rem;
+  width: 34rem;
+  height: 41rem;
+  rotate: -165deg;
+}
+
+@media (min-width: 64rem) {
+  body::before {
+    width: 38rem;
+    height: 46rem;
+  }
+  body::after {
+    width: 44rem;
+    height: 53rem;
+  }
 }
 
 /* Native <dialog>: strip the UA chrome, then style the backdrop. */

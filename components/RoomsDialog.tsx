@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -79,7 +79,7 @@ export default function RoomsDialog({ onClose }: { onClose: () => void }) {
           <button
             type="submit"
             disabled={newName.trim().length === 0 || atLimit}
-            className="min-h-11 rounded-lg bg-foreground px-4 text-sm font-semibold text-background disabled:opacity-40"
+            className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-foreground disabled:opacity-40"
           >
             Add
           </button>
@@ -144,7 +144,7 @@ function RoomRow({
           aria-label={`Move ${room.name} up`}
           className="size-11 shrink-0 rounded-lg hover:bg-surface-muted disabled:opacity-30 sm:size-9"
         >
-          ↑
+          â†‘
         </button>
         <button
           type="button"
@@ -153,7 +153,7 @@ function RoomRow({
           aria-label={`Move ${room.name} down`}
           className="size-11 shrink-0 rounded-lg hover:bg-surface-muted disabled:opacity-30 sm:size-9"
         >
-          ↓
+          â†“
         </button>
         <button
           type="button"

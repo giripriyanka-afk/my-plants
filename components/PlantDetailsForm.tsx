@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useId, useState } from "react";
 
@@ -215,7 +215,7 @@ export default function PlantDetailsForm({ plant, onSave }: Props) {
         <button
           type="submit"
           disabled={!isDirty}
-          className="min-h-11 rounded-lg bg-foreground px-4 text-sm font-semibold text-background disabled:opacity-40"
+          className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-foreground disabled:opacity-40"
         >
           Save details
         </button>
