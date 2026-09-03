@@ -27,6 +27,26 @@ export const CARE_ACTION_META: Readonly<Record<CareActionId, CareActionMeta>> =
     repot: { label: "Repot", pastLabel: "Repotted", emoji: "🪴" },
   });
 
+/** Slugs, not labels, are what persist — display copy can change without a migration. */
+export const LIGHT_LEVELS = [
+  "unspecified",
+  "full-sun",
+  "bright-indirect",
+  "partial-shade",
+  "low-light",
+] as const;
+
+export type LightLevel = (typeof LIGHT_LEVELS)[number];
+
+export const LIGHT_LEVEL_LABEL: Readonly<Record<LightLevel, string>> =
+  Object.freeze({
+    unspecified: "Unspecified",
+    "full-sun": "Full sun",
+    "bright-indirect": "Bright indirect",
+    "partial-shade": "Partial shade",
+    "low-light": "Low light",
+  });
+
 export interface CareState {
   /** null means the action has never been recorded. */
   lastDone: IsoDay | null;
@@ -41,11 +61,21 @@ export interface Plant {
   name: string;
   description: string;
   care: CarePlan;
+  /** v2. The day the plant was acquired. null = not recorded. */
+  purchasedOn: IsoDay | null;
+  /** v2. Free text off the plant passport label. */
+  passport: string;
+  /** v2. Longer-form notes; `description` stays the short card blurb. */
+  careNotes: string;
+  /** v2. */
+  light: LightLevel;
+  /** v2. Short free text, e.g. "kitchen windowsill". */
+  location: string;
   createdAt: number;
   updatedAt: number;
 }
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /** The shape persisted to localStorage and written by the export button. */
 export interface PlantsDocument {

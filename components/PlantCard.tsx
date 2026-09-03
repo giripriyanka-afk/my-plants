@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import CareActionRow from "@/components/CareActionRow";
 import { CARE_ACTIONS, type IsoDay, type Plant } from "@/types/plant";
 
@@ -15,7 +17,17 @@ export default function PlantCard({ plant, today, onEdit, onDelete }: Props) {
     <article className="flex flex-col rounded-xl border border-border-subtle bg-surface p-4 sm:p-5">
       <header className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-semibold break-words">{plant.name}</h2>
+          {/* Only the name is the link. The card holds four Done buttons plus
+              Edit and Delete, so wrapping the whole thing in an anchor would
+              nest interactive elements. */}
+          <h2 className="text-lg font-semibold break-words">
+            <Link
+              href={`/plants/${encodeURIComponent(plant.id)}`}
+              className="inline-block rounded py-0.5 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-status-soon"
+            >
+              {plant.name}
+            </Link>
+          </h2>
           {plant.description && (
             <p className="mt-1 line-clamp-3 text-sm break-words text-muted">
               {plant.description}

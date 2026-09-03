@@ -1,12 +1,20 @@
 import { clampInterval, createCarePlan } from "@/lib/care";
-import { todayIsoDay } from "@/lib/dates";
+import { isIsoDay, todayIsoDay } from "@/lib/dates";
 import { newId } from "@/lib/id";
-import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from "@/lib/constants";
+import {
+  MAX_CARE_NOTES_LENGTH,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_LOCATION_LENGTH,
+  MAX_NAME_LENGTH,
+  MAX_PASSPORT_LENGTH,
+} from "@/lib/constants";
 import { loadDocument, saveDocument } from "@/lib/storage";
 import {
   CARE_ACTIONS,
   SCHEMA_VERSION,
   type CareActionId,
+  type IsoDay,
+  type LightLevel,
   type Plant,
   type PlantsDocument,
   type PlantsSnapshot,
@@ -109,6 +117,12 @@ export interface PlantsActions {
       name?: string;
       description?: string;
       intervals?: Partial<Record<CareActionId, number>>;
+      /** undefined leaves the date alone; null clears it. */
+      purchasedOn?: IsoDay | null;
+      passport?: string;
+      careNotes?: string;
+      light?: LightLevel;
+      location?: string;
     },
   ): void;
   deletePlant(id: string): void;
@@ -134,6 +148,11 @@ const actionsImpl: PlantsActions = {
       name: name.trim().slice(0, MAX_NAME_LENGTH),
       description: description.slice(0, MAX_DESCRIPTION_LENGTH),
       care: createCarePlan(intervals),
+      purchasedOn: null,
+      passport: "",
+      careNotes: "",
+      light: "unspecified",
+      location: "",
       createdAt: now,
       updatedAt: now,
     };
@@ -165,6 +184,28 @@ const actionsImpl: PlantsActions = {
             ? plant.description
             : patch.description.slice(0, MAX_DESCRIPTION_LENGTH),
         care,
+        // Re-validated at the boundary, the same defence in depth as
+        // clampInterval: a bad value from any caller becomes null, not corrupt
+        // state.
+        purchasedOn:
+          patch.purchasedOn === undefined
+            ? plant.purchasedOn
+            : isIsoDay(patch.purchasedOn)
+              ? patch.purchasedOn
+              : null,
+        passport:
+          patch.passport === undefined
+            ? plant.passport
+            : patch.passport.slice(0, MAX_PASSPORT_LENGTH),
+        careNotes:
+          patch.careNotes === undefined
+            ? plant.careNotes
+            : patch.careNotes.slice(0, MAX_CARE_NOTES_LENGTH),
+        light: patch.light ?? plant.light,
+        location:
+          patch.location === undefined
+            ? plant.location
+            : patch.location.trim().slice(0, MAX_LOCATION_LENGTH),
         updatedAt: Date.now(),
       };
     });

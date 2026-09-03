@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
+import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import PlantCard from "@/components/PlantCard";
 import PlantFormDialog from "@/components/PlantFormDialog";
 import { usePlants } from "@/hooks/usePlants";
+import { useToday } from "@/hooks/useToday";
 import { sortPlantsByUrgency } from "@/lib/care";
-import { todayIsoDay } from "@/lib/dates";
 import {
   buildExportPayload,
   downloadJson,
@@ -32,19 +33,9 @@ export default function PlantsApp() {
   const [pendingDelete, setPendingDelete] = useState<Plant | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // "today" is only read once hydration has produced real data, so no date ever
-  // crosses the hydration boundary. Refreshed when the tab regains focus, which
-  // covers a tab left open past midnight and a laptop waking from sleep.
-  const [today, setToday] = useState(() => todayIsoDay());
-  useEffect(() => {
-    const refresh = () => setToday(todayIsoDay());
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    return () => {
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-    };
-  }, []);
+  // Only read once hydration has produced real data, so no date crosses the
+  // hydration boundary.
+  const today = useToday();
 
   function handleExport() {
     downloadJson(
@@ -216,53 +207,5 @@ export default function PlantsApp() {
         />
       )}
     </>
-  );
-}
-
-function ConfirmDeleteDialog({
-  plant,
-  onConfirm,
-  onCancel,
-}: {
-  plant: Plant;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    dialogRef.current?.showModal();
-  }, []);
-
-  return (
-    <dialog
-      ref={dialogRef}
-      onClose={onCancel}
-      className="m-0 w-full max-w-none border-0 bg-transparent p-0 backdrop:bg-black/50 sm:m-auto sm:w-[min(28rem,calc(100vw-2rem))]"
-    >
-      <div className="mt-auto rounded-t-2xl border border-border-subtle bg-surface p-5 text-foreground shadow-xl sm:rounded-2xl">
-        <h2 className="text-lg font-semibold">Delete this plant?</h2>
-        <p className="mt-2 text-sm break-words text-muted">
-          {plant.name} and its care dates will be removed. This can&apos;t be
-          undone.
-        </p>
-        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="min-h-11 rounded-lg border border-border-subtle px-4 text-sm font-medium hover:bg-surface-muted"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="min-h-11 rounded-lg bg-status-overdue px-4 text-sm font-semibold text-white"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </dialog>
   );
 }
