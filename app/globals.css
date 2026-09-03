@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --surface: #ffffff;
+  --surface-muted: #f6f7f6;
+  --border: #e2e5e2;
+  --muted: #64716a;
+
+  /* Care status palette. Chosen for contrast against --surface in both themes. */
+  --status-overdue: #b42318;
+  --status-overdue-bg: #fef3f2;
+  --status-due: #b54708;
+  --status-due-bg: #fffaeb;
+  --status-soon: #175cd3;
+  --status-soon-bg: #eff8ff;
+  --status-ok: #067647;
+  --status-ok-bg: #ecfdf3;
+  --status-never: #5d6b7a;
+  --status-never-bg: #f2f4f7;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border-subtle: var(--border);
+  --color-muted: var(--muted);
+
+  --color-status-overdue: var(--status-overdue);
+  --color-status-overdue-bg: var(--status-overdue-bg);
+  --color-status-due: var(--status-due);
+  --color-status-due-bg: var(--status-due-bg);
+  --color-status-soon: var(--status-soon);
+  --color-status-soon-bg: var(--status-soon-bg);
+  --color-status-ok: var(--status-ok);
+  --color-status-ok-bg: var(--status-ok-bg);
+  --color-status-never: var(--status-never);
+  --color-status-never-bg: var(--status-never-bg);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --surface: #161816;
+    --surface-muted: #1e211f;
+    --border: #2c302e;
+    --muted: #9aa6a0;
+
+    --status-overdue: #fda29b;
+    --status-overdue-bg: #3b1512;
+    --status-due: #fec84b;
+    --status-due-bg: #3a2508;
+    --status-soon: #84caff;
+    --status-soon-bg: #0f2942;
+    --status-ok: #75e0a7;
+    --status-ok-bg: #0d2b1c;
+    --status-never: #b3bdc9;
+    --status-never-bg: #22262b;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* Was `Arial, Helvetica, sans-serif`, which silently defeated the Geist
+     fonts that layout.tsx loads. --font-sans is wired to it in @theme inline. */
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Native <dialog>: strip the UA chrome, then style the backdrop. */
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
