@@ -1,5 +1,5 @@
 import { STORAGE_KEY } from "@/lib/constants";
-import { coercePlantsDocument } from "@/lib/validate";
+import { coercePlantsDocument, createDefaultRooms } from "@/lib/validate";
 import { SCHEMA_VERSION, type PlantsDocument } from "@/types/plant";
 
 /**
@@ -20,7 +20,9 @@ export interface LoadResult {
 }
 
 export function emptyDocument(): PlantsDocument {
-  return { version: SCHEMA_VERSION, plants: [] };
+  // A first-run document gets the starter rooms, the same set a pre-v3
+  // document is seeded with on upgrade.
+  return { version: SCHEMA_VERSION, rooms: createDefaultRooms(), plants: [] };
 }
 
 function getStore(): Storage | null {

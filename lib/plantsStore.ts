@@ -7,6 +7,8 @@ import {
   MAX_LOCATION_LENGTH,
   MAX_NAME_LENGTH,
   MAX_PASSPORT_LENGTH,
+  MAX_ROOM_NAME_LENGTH,
+  MAX_ROOMS,
 } from "@/lib/constants";
 import { loadDocument, saveDocument } from "@/lib/storage";
 import {
@@ -18,6 +20,7 @@ import {
   type Plant,
   type PlantsDocument,
   type PlantsSnapshot,
+  type Room,
 } from "@/types/plant";
 
 /**
@@ -34,6 +37,7 @@ import {
 const SERVER_SNAPSHOT: PlantsSnapshot = Object.freeze({
   status: "hydrating",
   persistence: "ok",
+  rooms: Object.freeze([]) as readonly Room[],
   plants: Object.freeze([]) as readonly Plant[],
   lastError: null,
 });
@@ -61,6 +65,7 @@ export function getSnapshot(): PlantsSnapshot {
     snapshot = Object.freeze({
       status: "ready",
       persistence: result.available ? "ok" : "unavailable",
+      rooms: Object.freeze(result.document.rooms) as readonly Room[],
       plants: Object.freeze(result.document.plants) as readonly Plant[],
       lastError: result.error,
     });
@@ -72,9 +77,13 @@ export function getServerSnapshot(): PlantsSnapshot {
   return SERVER_SNAPSHOT;
 }
 
-function commit(nextPlants: readonly Plant[]): void {
+function commit(
+  nextPlants: readonly Plant[],
+  nextRooms: readonly Room[] = snapshot.rooms,
+): void {
   const document: PlantsDocument = {
     version: SCHEMA_VERSION,
+    rooms: [...nextRooms],
     plants: [...nextPlants],
   };
   const saveError = saveDocument(document);
@@ -84,11 +93,22 @@ function commit(nextPlants: readonly Plant[]): void {
   snapshot = Object.freeze({
     status: "ready",
     persistence: saveError ? "unavailable" : "ok",
+    rooms: Object.freeze(nextRooms) as readonly Room[],
     plants: Object.freeze(nextPlants) as readonly Plant[],
     lastError: saveError,
   });
 
   for (const listener of listeners) listener();
+}
+
+/**
+ * A roomId is only ever stored if it points at a room that exists. Keeping this
+ * at the store boundary means the list page can group on roomId without a plant
+ * ever vanishing into a room that isn't there.
+ */
+function resolveRoomId(roomId: string | null): string | null {
+  if (roomId === null) return null;
+  return snapshot.rooms.some((room) => room.id === roomId) ? roomId : null;
 }
 
 function mapPlant(
@@ -110,6 +130,7 @@ export interface PlantsActions {
     description: string;
     /** Chosen once at creation; omitted actions fall back to the default. */
     intervals?: Partial<Record<CareActionId, number>>;
+    roomId?: string | null;
   }): string;
   updatePlant(
     id: string,
@@ -123,9 +144,16 @@ export interface PlantsActions {
       careNotes?: string;
       light?: LightLevel;
       location?: string;
+      roomId?: string | null;
     },
   ): void;
   deletePlant(id: string): void;
+  addRoom(name: string): void;
+  renameRoom(roomId: string, name: string): void;
+  /** Plants in the room become unassigned rather than being orphaned. */
+  deleteRoom(roomId: string): void;
+  /** Moves a room one place up (-1) or down (+1) in display order. */
+  moveRoom(roomId: string, delta: -1 | 1): void;
   /** Stamps today's date, overwriting whatever was there. No history is kept. */
   markCareDone(id: string, action: CareActionId): void;
   clearCareDone(id: string, action: CareActionId): void;
@@ -140,7 +168,7 @@ export interface PlantsActions {
  * Note: setCareInterval, not setInterval — the latter shadows the global.
  */
 const actionsImpl: PlantsActions = {
-  addPlant({ name, description, intervals }) {
+  addPlant({ name, description, intervals, roomId }) {
     const id = newId();
     const now = Date.now();
     const plant: Plant = {
@@ -153,6 +181,7 @@ const actionsImpl: PlantsActions = {
       careNotes: "",
       light: "unspecified",
       location: "",
+      roomId: resolveRoomId(roomId ?? null),
       createdAt: now,
       updatedAt: now,
     };
@@ -206,6 +235,10 @@ const actionsImpl: PlantsActions = {
           patch.location === undefined
             ? plant.location
             : patch.location.trim().slice(0, MAX_LOCATION_LENGTH),
+        roomId:
+          patch.roomId === undefined
+            ? plant.roomId
+            : resolveRoomId(patch.roomId),
         updatedAt: Date.now(),
       };
     });
@@ -250,8 +283,53 @@ const actionsImpl: PlantsActions = {
     }));
   },
 
+  addRoom(name) {
+    const trimmed = name.trim().slice(0, MAX_ROOM_NAME_LENGTH);
+    if (trimmed.length === 0) return;
+    if (snapshot.rooms.length >= MAX_ROOMS) return;
+    commit(snapshot.plants, [
+      ...snapshot.rooms,
+      { id: newId(), name: trimmed },
+    ]);
+  },
+
+  renameRoom(roomId, name) {
+    const trimmed = name.trim().slice(0, MAX_ROOM_NAME_LENGTH);
+    if (trimmed.length === 0) return;
+    let changed = false;
+    const rooms = snapshot.rooms.map((room) => {
+      if (room.id !== roomId || room.name === trimmed) return room;
+      changed = true;
+      return { ...room, name: trimmed };
+    });
+    if (changed) commit(snapshot.plants, rooms);
+  },
+
+  deleteRoom(roomId) {
+    const rooms = snapshot.rooms.filter((room) => room.id !== roomId);
+    if (rooms.length === snapshot.rooms.length) return;
+    // Unassign rather than orphan — a plant must never point at a missing room.
+    const plants = snapshot.plants.map((plant) =>
+      plant.roomId === roomId
+        ? { ...plant, roomId: null, updatedAt: Date.now() }
+        : plant,
+    );
+    commit(plants, rooms);
+  },
+
+  moveRoom(roomId, delta) {
+    const from = snapshot.rooms.findIndex((room) => room.id === roomId);
+    if (from === -1) return;
+    const to = from + delta;
+    if (to < 0 || to >= snapshot.rooms.length) return;
+    const rooms = [...snapshot.rooms];
+    const [moved] = rooms.splice(from, 1);
+    rooms.splice(to, 0, moved);
+    commit(snapshot.plants, rooms);
+  },
+
   replaceAll(document) {
-    commit(document.plants);
+    commit(document.plants, document.rooms);
   },
 
   dismissError() {

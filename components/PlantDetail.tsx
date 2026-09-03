@@ -17,6 +17,7 @@ import {
   CARE_ACTIONS,
   LIGHT_LEVEL_LABEL,
   type Plant,
+  type Room,
 } from "@/types/plant";
 
 /**
@@ -87,7 +88,7 @@ export default function PlantDetail({ id }: { id: string }) {
       {plant.description && (
         <p className="mt-1 break-words text-muted">{plant.description}</p>
       )}
-      <PlantChips plant={plant} />
+      <PlantChips plant={plant} rooms={snapshot.rooms} />
 
       <h2 className="mt-8 text-sm font-semibold tracking-wide text-muted uppercase">
         Care
@@ -121,8 +122,13 @@ export default function PlantDetail({ id }: { id: string }) {
         <PlantFormDialog
           key={plant.id}
           plant={plant}
-          onSave={({ name, description, intervals }) =>
-            actions.updatePlant(plant.id, { name, description, intervals })
+          onSave={({ name, description, intervals, roomId }) =>
+            actions.updatePlant(plant.id, {
+              name,
+              description,
+              intervals,
+              roomId,
+            })
           }
           onClose={() => setEditOpen(false)}
         />
@@ -153,8 +159,16 @@ function BackLink() {
 }
 
 /** At-a-glance values, derived straight from the plant so they update on save. */
-function PlantChips({ plant }: { plant: Plant }) {
+function PlantChips({
+  plant,
+  rooms,
+}: {
+  plant: Plant;
+  rooms: readonly Room[];
+}) {
   const chips: string[] = [];
+  const room = rooms.find((r) => r.id === plant.roomId);
+  if (room) chips.push(`🚪 ${room.name}`);
   if (plant.light !== "unspecified") {
     chips.push(`🪟 ${LIGHT_LEVEL_LABEL[plant.light]}`);
   }
