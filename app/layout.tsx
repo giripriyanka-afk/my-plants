@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 
 import ThemeToggle from "@/components/ThemeToggle";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
@@ -55,7 +56,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <div className="mx-auto flex w-full max-w-6xl justify-end px-4 pt-4 sm:px-6 lg:px-8">
+        {/* Site-level chrome: navigation and the theme switch together, on
+            every route. Both are app-wide concerns rather than list-page
+            actions, which is why they sit outside {children}. */}
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-end gap-1 px-4 pt-4 sm:px-6 lg:px-8">
+          <Link
+            href="/about"
+            className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground"
+          >
+            About
+          </Link>
           <ThemeToggle />
         </div>
         {children}
