@@ -1,7 +1,7 @@
 "use client";
 
 import type { CareStatus, DueStatus } from "@/lib/care";
-import { formatIsoDay } from "@/lib/dates";
+import { formatDurationShort, formatIsoDay } from "@/lib/dates";
 import { CARE_ACTION_META } from "@/types/plant";
 
 /**
@@ -63,9 +63,9 @@ export function badgeText(status: CareStatus): string {
   if (status.status === "never" || status.dueDate === null) return "Never";
   if (status.status === "due") return "Due today";
   if (status.status === "overdue") {
-    return `Overdue ${-(status.daysUntilDue ?? 0)}d`;
+    return `Overdue ${formatDurationShort(-(status.daysUntilDue ?? 0))}`;
   }
-  return `Due in ${status.daysUntilDue}d`;
+  return `Due in ${formatDurationShort(status.daysUntilDue ?? 0)}`;
 }
 
 export default function CareBadge({ status }: { status: CareStatus }) {

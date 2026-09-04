@@ -2,7 +2,12 @@
 
 import CareBadge from "@/components/CareBadge";
 import { computeCareStatus } from "@/lib/care";
-import { formatIsoDay, relativeDayLabel } from "@/lib/dates";
+import {
+  formatDurationLong,
+  formatIsoDay,
+  isApproximateDuration,
+  relativeDayLabel,
+} from "@/lib/dates";
 import { usePlants } from "@/hooks/usePlants";
 import {
   CARE_ACTION_META,
@@ -81,7 +86,12 @@ export default function CareActionDetailRow({
         <div className="flex justify-between gap-2 sm:block">
           <dt className="text-xs text-muted">Every</dt>
           <dd className="tabular-nums">
-            {care.intervalDays} {care.intervalDays === 1 ? "day" : "days"}
+            {formatDurationLong(care.intervalDays)}
+            {/* The month figure is rounded, so the exact interval is spelled
+                out beside it rather than hidden in a tooltip. */}
+            {isApproximateDuration(care.intervalDays) && (
+              <span className="text-muted"> ({care.intervalDays} days)</span>
+            )}
           </dd>
         </div>
       </dl>

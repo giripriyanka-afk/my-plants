@@ -1,4 +1,9 @@
-import { addDays, daysBetween } from "@/lib/dates";
+import {
+  addDays,
+  DAYS_PER_MONTH,
+  DAYS_PER_YEAR,
+  daysBetween,
+} from "@/lib/dates";
 import {
   DEFAULT_INTERVAL_DAYS,
   DUE_SOON_WINDOW_DAYS,
@@ -129,4 +134,49 @@ export function sortPlantsByUrgency(
         a.plant.name.localeCompare(b.plant.name),
     )
     .map((entry) => entry.plant);
+}
+
+/**
+ * Interval entry units. Intervals are always *stored* in days — the unit is
+ * only how the number was typed, so nothing here reaches localStorage.
+ *
+ * The conversion factors are the same constants the display formatter uses, so
+ * a schedule entered as "2 months" reads back as "2mo" rather than drifting to
+ * something like "1.9mo".
+ */
+export const INTERVAL_UNITS = ["days", "months", "years"] as const;
+
+export type IntervalUnit = (typeof INTERVAL_UNITS)[number];
+
+const UNIT_DAYS: Readonly<Record<IntervalUnit, number>> = Object.freeze({
+  days: 1,
+  months: DAYS_PER_MONTH,
+  years: DAYS_PER_YEAR,
+});
+
+export function unitToDays(value: number, unit: IntervalUnit): number {
+  return value * UNIT_DAYS[unit];
+}
+
+export function daysToUnit(days: number, unit: IntervalUnit): number {
+  return days / UNIT_DAYS[unit];
+}
+
+/** Keeps the number input's max meaningful: 3650 days, 121 months, 10 years. */
+export function maxValueForUnit(unit: IntervalUnit): number {
+  return Math.floor(MAX_INTERVAL_DAYS / UNIT_DAYS[unit]);
+}
+
+/**
+ * The unit a stored interval was most likely typed in, so reopening the dialog
+ * shows "2 months" rather than "60 days".
+ *
+ * Only exact multiples qualify. 45 days stays 45 days rather than being
+ * rounded into "1.5 months" — the form is where values are set, so it must
+ * never quietly change one just by being opened.
+ */
+export function bestUnitFor(days: number): IntervalUnit {
+  if (days % DAYS_PER_YEAR === 0) return "years";
+  if (days > DAYS_PER_MONTH && days % DAYS_PER_MONTH === 0) return "months";
+  return "days";
 }
