@@ -4,7 +4,6 @@ import {
   MAX_CARE_NOTES_LENGTH,
   MAX_DESCRIPTION_LENGTH,
   MAX_IMPORT_BYTES,
-  MAX_LOCATION_LENGTH,
   MAX_NAME_LENGTH,
   MAX_PASSPORT_LENGTH,
   MAX_ROOM_NAME_LENGTH,
@@ -147,7 +146,6 @@ function coercePlant(
     passport: asString(value.passport, MAX_PASSPORT_LENGTH),
     careNotes: asString(value.careNotes, MAX_CARE_NOTES_LENGTH),
     light: asLightLevel(value.light),
-    location: asString(value.location, MAX_LOCATION_LENGTH).trim(),
     roomId:
       typeof value.roomId === "string" && roomIds.has(value.roomId)
         ? value.roomId

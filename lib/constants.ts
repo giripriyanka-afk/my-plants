@@ -11,7 +11,6 @@ export const MAX_NAME_LENGTH = 80;
 export const MAX_DESCRIPTION_LENGTH = 2000;
 export const MAX_PASSPORT_LENGTH = 500;
 export const MAX_CARE_NOTES_LENGTH = 2000;
-export const MAX_LOCATION_LENGTH = 80;
 export const MAX_ROOM_NAME_LENGTH = 40;
 export const MAX_ROOMS = 50;
 

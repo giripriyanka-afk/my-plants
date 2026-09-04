@@ -4,7 +4,6 @@ import { newId } from "@/lib/id";
 import {
   MAX_CARE_NOTES_LENGTH,
   MAX_DESCRIPTION_LENGTH,
-  MAX_LOCATION_LENGTH,
   MAX_NAME_LENGTH,
   MAX_PASSPORT_LENGTH,
   MAX_ROOM_NAME_LENGTH,
@@ -143,7 +142,6 @@ export interface PlantsActions {
       passport?: string;
       careNotes?: string;
       light?: LightLevel;
-      location?: string;
       roomId?: string | null;
     },
   ): void;
@@ -180,7 +178,6 @@ const actionsImpl: PlantsActions = {
       passport: "",
       careNotes: "",
       light: "unspecified",
-      location: "",
       roomId: resolveRoomId(roomId ?? null),
       createdAt: now,
       updatedAt: now,
@@ -231,10 +228,6 @@ const actionsImpl: PlantsActions = {
             ? plant.careNotes
             : patch.careNotes.slice(0, MAX_CARE_NOTES_LENGTH),
         light: patch.light ?? plant.light,
-        location:
-          patch.location === undefined
-            ? plant.location
-            : patch.location.trim().slice(0, MAX_LOCATION_LENGTH),
         roomId:
           patch.roomId === undefined
             ? plant.roomId
