@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRef, useState } from "react";
 
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
@@ -81,21 +80,13 @@ export default function PlantsApp() {
           <p className="text-sm text-muted">
             {isHydrating
               ? " "
-              : `${snapshot.plants.length} ${snapshot.plants.length === 1 ? "plant" : "plants"} in your home. The more green, the better!`}
+              : `${snapshot.plants.length} ${snapshot.plants.length === 1 ? "plant" : "plants"} in your home. Keep'em thriving!`}
           </p>
         </div>
 
         {/* flex-wrap rather than a fixed grid: the control count changes as
             features land, and wrapping handles any number of them. */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Navigation, not an action, so it stays visually quieter than the
-              buttons beside it. */}
-          <Link
-            href="/about"
-            className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground"
-          >
-            About
-          </Link>
           <button
             type="button"
             onClick={() => setRoomsOpen(true)}
@@ -103,28 +94,6 @@ export default function PlantsApp() {
           >
             Rooms
           </button>
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={snapshot.plants.length === 0}
-            className="min-h-11 rounded-lg border border-border-subtle px-3 text-sm font-medium hover:bg-surface-muted disabled:opacity-40"
-          >
-            Export
-          </button>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="min-h-11 rounded-lg border border-border-subtle px-3 text-sm font-medium hover:bg-surface-muted"
-          >
-            Import
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            onChange={handleImportFile}
-            className="hidden"
-          />
           <button
             type="button"
             onClick={() => {
@@ -213,6 +182,44 @@ export default function PlantsApp() {
           </section>
         ))
       )}
+
+      {/* Backup lives at the foot of the page: occasional maintenance, not a
+          per-visit action, so it shouldn't compete with Add plant. This is also
+          the natural place to say where the data actually lives, which the
+          header subtitle used to carry. */}
+      <footer className="mt-12 border-t border-border-subtle pt-6">
+        <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">
+          Backup
+        </h2>
+        <p className="mt-1 max-w-prose text-sm text-muted">
+          Your plants are saved in this browser only. Export a copy to keep a
+          backup, or to move them to another device.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={snapshot.plants.length === 0}
+            className="min-h-11 rounded-lg border border-border-subtle px-3 text-sm font-medium hover:bg-surface-muted disabled:opacity-40"
+          >
+            Export
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="min-h-11 rounded-lg border border-border-subtle px-3 text-sm font-medium hover:bg-surface-muted"
+          >
+            Import
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={handleImportFile}
+            className="hidden"
+          />
+        </div>
+      </footer>
 
       {formOpen && (
         <PlantFormDialog
