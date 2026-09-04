@@ -217,30 +217,33 @@ body::after {
   mask-size: contain;
 }
 
+/* Pulled further onto the page than before. The old placement showed mostly
+   the outer edges, which is exactly the part that carries no information about
+   what the shape is. Box ratios track the 200x250 viewBox. */
 body::before {
-  top: -7rem;
-  right: -9rem;
-  width: 30rem;
-  height: 36rem;
-  rotate: 18deg;
+  top: -5rem;
+  right: -6rem;
+  width: 28rem;
+  height: 35rem;
+  rotate: 15deg;
 }
 
 body::after {
-  bottom: -11rem;
-  left: -10rem;
-  width: 34rem;
-  height: 41rem;
-  rotate: -165deg;
+  bottom: -7rem;
+  left: -7rem;
+  width: 32rem;
+  height: 40rem;
+  rotate: -160deg;
 }
 
 @media (min-width: 64rem) {
   body::before {
-    width: 38rem;
-    height: 46rem;
+    width: 34rem;
+    height: 42.5rem;
   }
   body::after {
-    width: 44rem;
-    height: 53rem;
+    width: 40rem;
+    height: 50rem;
   }
 }
 

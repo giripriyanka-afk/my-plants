@@ -1,4 +1,17 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# My Plants
+
+A single-user houseplant care tracker. Add your plants, group them by room, and
+track watering, fertilizing, pruning and repotting against a schedule you set
+per plant.
+
+Everything lives in your browser's localStorage — no backend, no database, no
+account — with JSON export and import for backups and moving between devices.
+
+![The My Plants list page: plants grouped by room, each card showing a status dot and a collapsible care schedule](docs/screenshot.png)
+
+Built with [Next.js](https://nextjs.org) (App Router), TypeScript and
+Tailwind CSS, bootstrapped with
+[`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 

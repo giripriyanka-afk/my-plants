@@ -19,7 +19,10 @@ import type { Plant } from "@/types/plant";
 
 // Wide cards: each care row has to hold emoji, label, badge, interval and
 // button on one line, which a three-up grid cannot give it.
-const CARD_GRID = "grid grid-cols-1 gap-4 xl:grid-cols-2";
+// items-start matters: without it a row stretches every card to match the
+// tallest, so one expanded card leaves its neighbour with a column of blank
+// space below the Care toggle.
+const CARD_GRID = "grid grid-cols-1 items-start gap-4 xl:grid-cols-2";
 
 /**
  * The single "use client" boundary. Everything it imports joins the client

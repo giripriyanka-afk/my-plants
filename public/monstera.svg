@@ -1,48 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250" width="200" height="250">
   <!--
     Stylised monstera deliciosa leaf, used as a CSS mask (see globals.css), so
     only the alpha channel matters — the fill colour here is irrelevant and the
     palette supplies the real one.
 
-    The blade is one outline; the characteristic side splits and fenestrations
-    are cut out through a mask rather than being drawn as separate shapes, so
-    the result is a single clean silhouette with real holes in it.
+    The outline is one continuous path that swings OUT to each lobe tip and
+    curves back IN toward the midrib, four times per side. Every segment is a
+    cubic curve; there is not a straight edge in the blade.
+
+    That is the whole point of this revision. The previous version cut the
+    splits as straight-sided triangles out of an ellipse, and at backdrop
+    opacity those hard wedges read as scattered pale polygons rather than
+    foliage. Curved lobes keep the silhouette organic even when it is barely
+    visible.
+
+    Only the fenestrations are still cut through a mask — they are holes in the
+    middle of the blade, so they cannot be part of the outline.
   -->
   <defs>
-    <mask id="cuts" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="240">
-      <rect width="200" height="240" fill="#fff"/>
-
-      <!-- Side splits, angling up and outward from the leaf edge. -->
-      <path d="M8 92 L72 104 L10 116 Z" fill="#000"/>
-      <path d="M12 138 L78 148 L18 160 Z" fill="#000"/>
-      <path d="M26 182 L82 188 L36 200 Z" fill="#000"/>
-      <path d="M192 92 L128 104 L190 116 Z" fill="#000"/>
-      <path d="M188 138 L122 148 L182 160 Z" fill="#000"/>
-      <path d="M174 182 L118 188 L164 200 Z" fill="#000"/>
-
-      <!-- Upper notches, shallower where the blade narrows to the tip. -->
-      <path d="M54 46 L94 64 L50 66 Z" fill="#000"/>
-      <path d="M146 46 L106 64 L150 66 Z" fill="#000"/>
-
-      <!-- Fenestrations either side of the midrib. -->
-      <ellipse cx="78" cy="120" rx="8" ry="15" transform="rotate(-14 78 120)" fill="#000"/>
-      <ellipse cx="122" cy="120" rx="8" ry="15" transform="rotate(14 122 120)" fill="#000"/>
-      <ellipse cx="82" cy="166" rx="7" ry="12" transform="rotate(-10 82 166)" fill="#000"/>
-      <ellipse cx="118" cy="166" rx="7" ry="12" transform="rotate(10 118 166)" fill="#000"/>
+    <mask id="holes" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="250">
+      <rect width="200" height="250" fill="#fff"/>
+      <ellipse cx="80" cy="100" rx="7" ry="13" transform="rotate(-24 80 100)" fill="#000"/>
+      <ellipse cx="120" cy="100" rx="7" ry="13" transform="rotate(24 120 100)" fill="#000"/>
+      <ellipse cx="82" cy="152" rx="7" ry="12" transform="rotate(-14 82 152)" fill="#000"/>
+      <ellipse cx="118" cy="152" rx="7" ry="12" transform="rotate(14 118 152)" fill="#000"/>
+      <ellipse cx="87" cy="198" rx="5" ry="9" transform="rotate(-8 87 198)" fill="#000"/>
+      <ellipse cx="113" cy="198" rx="5" ry="9" transform="rotate(8 113 198)" fill="#000"/>
     </mask>
   </defs>
 
   <g fill="#000">
     <path
-      mask="url(#cuts)"
-      d="M100 8
-         C140 38 176 78 184 122
-         C190 156 172 196 136 216
-         C124 223 110 227 100 227
-         C90 227 76 223 64 216
-         C28 196 10 156 16 122
-         C24 78 60 38 100 8 Z"/>
+      mask="url(#holes)"
+      d="M100 14
+         C116 30 130 42 138 58
+         C130 66 118 71 106 75
+         C128 81 150 93 161 111
+         C147 117 127 121 108 124
+         C136 131 158 146 167 168
+         C151 173 129 177 110 180
+         C132 190 146 202 149 218
+         C133 226 115 230 100 231
+         C85 230 67 226 51 218
+         C54 202 68 190 90 180
+         C71 177 49 173 33 168
+         C42 146 64 131 92 124
+         C73 121 53 117 39 111
+         C50 93 72 81 94 75
+         C82 71 70 66 62 58
+         C70 42 84 30 100 14 Z"/>
     <!-- Petiole. -->
-    <path d="M96 222 C96 230 95 236 92 240 L108 240 C105 236 104 230 104 222 Z"/>
+    <path d="M96 228 C96 236 95 243 92 250 L108 250 C105 243 104 236 104 228 Z"/>
   </g>
 </svg>
