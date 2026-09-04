@@ -87,8 +87,6 @@ export interface Plant {
   careNotes: string;
   /** v2. */
   light: LightLevel;
-  /** v2. The exact spot within the room, e.g. "south-facing windowsill". */
-  location: string;
   /** v3. Points at a Room.id, or null for unassigned. */
   roomId: string | null;
   createdAt: number;

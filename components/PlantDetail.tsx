@@ -172,7 +172,6 @@ function PlantChips({
   if (plant.light !== "unspecified") {
     chips.push(`🪟 ${LIGHT_LEVEL_LABEL[plant.light]}`);
   }
-  if (plant.location) chips.push(`📍 ${plant.location}`);
   if (plant.purchasedOn) {
     chips.push(`🧾 Purchased ${formatIsoDay(plant.purchasedOn)}`);
   }

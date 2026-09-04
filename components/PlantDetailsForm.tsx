@@ -4,7 +4,6 @@ import { useId, useState } from "react";
 
 import {
   MAX_CARE_NOTES_LENGTH,
-  MAX_LOCATION_LENGTH,
   MAX_PASSPORT_LENGTH,
 } from "@/lib/constants";
 import { isIsoDay } from "@/lib/dates";
@@ -21,7 +20,6 @@ export interface DetailsPatch {
   passport: string;
   careNotes: string;
   light: LightLevel;
-  location: string;
 }
 
 interface DetailsDraft {
@@ -30,7 +28,6 @@ interface DetailsDraft {
   passport: string;
   careNotes: string;
   light: LightLevel;
-  location: string;
 }
 
 const DRAFT_KEYS = [
@@ -38,7 +35,6 @@ const DRAFT_KEYS = [
   "passport",
   "careNotes",
   "light",
-  "location",
 ] as const;
 
 function toDraft(plant: Plant): DetailsDraft {
@@ -47,7 +43,6 @@ function toDraft(plant: Plant): DetailsDraft {
     passport: plant.passport,
     careNotes: plant.careNotes,
     light: plant.light,
-    location: plant.location,
   };
 }
 
@@ -71,7 +66,6 @@ export default function PlantDetailsForm({ plant, onSave }: Props) {
 
   const purchasedId = useId();
   const lightId = useId();
-  const locationId = useId();
   const passportId = useId();
   const notesId = useId();
 
@@ -91,7 +85,6 @@ export default function PlantDetailsForm({ plant, onSave }: Props) {
       passport: draft.passport,
       careNotes: draft.careNotes,
       light: draft.light,
-      location: draft.location.trim(),
     });
   }
 
@@ -149,21 +142,6 @@ export default function PlantDetailsForm({ plant, onSave }: Props) {
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="sm:col-span-2">
-          <label htmlFor={locationId} className="text-sm font-medium">
-            Location
-          </label>
-          <input
-            id={locationId}
-            type="text"
-            value={draft.location}
-            onChange={(event) => set("location", event.target.value)}
-            maxLength={MAX_LOCATION_LENGTH}
-            placeholder="Kitchen windowsill"
-            className={`${field} min-h-11`}
-          />
         </div>
 
         <div className="sm:col-span-2">
