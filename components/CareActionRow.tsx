@@ -2,6 +2,7 @@
 
 import CareBadge from "@/components/CareBadge";
 import { computeCareStatus } from "@/lib/care";
+import { formatDurationShort, isApproximateDuration } from "@/lib/dates";
 import { usePlants } from "@/hooks/usePlants";
 import {
   CARE_ACTION_META,
@@ -35,8 +36,16 @@ export default function CareActionRow({ plantId, action, care, today }: Props) {
 
       <CareBadge status={status} />
 
-      <span className="shrink-0 text-xs whitespace-nowrap text-muted tabular-nums">
-        every {care.intervalDays}d
+      <span
+        className="shrink-0 text-xs whitespace-nowrap text-muted tabular-nums"
+        // Months are rounded, so keep the exact figure reachable on hover.
+        title={
+          isApproximateDuration(care.intervalDays)
+            ? `Every ${care.intervalDays} days`
+            : undefined
+        }
+      >
+        every {formatDurationShort(care.intervalDays)}
       </span>
 
       <button

@@ -3,11 +3,18 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 import { usePlants } from "@/hooks/usePlants";
-import { clampInterval } from "@/lib/care";
+import {
+  bestUnitFor,
+  clampInterval,
+  daysToUnit,
+  INTERVAL_UNITS,
+  maxValueForUnit,
+  unitToDays,
+  type IntervalUnit,
+} from "@/lib/care";
 import {
   DEFAULT_INTERVAL_DAYS,
   MAX_DESCRIPTION_LENGTH,
-  MAX_INTERVAL_DAYS,
   MAX_NAME_LENGTH,
   MIN_INTERVAL_DAYS,
 } from "@/lib/constants";
@@ -51,23 +58,41 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
   const nameId = useId();
   const descriptionId = useId();
   const roomSelectId = useId();
+  const intervalBaseId = useId();
   const isNew = plant === null;
 
   const [name, setName] = useState(plant?.name ?? "");
   const [description, setDescription] = useState(plant?.description ?? "");
   const [roomId, setRoomId] = useState<string | null>(plant?.roomId ?? null);
 
-  // Held as text so the field can be cleared mid-typing without snapping back
-  // to a clamped value. Clamped once, on submit.
-  const [intervalText, setIntervalText] = useState<Record<CareActionId, string>>(
-    () =>
-      Object.fromEntries(
-        CARE_ACTIONS.map((action) => [
-          action,
-          String(plant?.care[action].intervalDays ?? DEFAULT_INTERVAL_DAYS),
-        ]),
-      ) as Record<CareActionId, string>,
+  /**
+   * Value held as text so the field can be cleared mid-typing without snapping
+   * back to a clamped number; converted and clamped once, on submit.
+   *
+   * The unit is seeded from the stored interval, so a plant on 60 days reopens
+   * as "2 months" rather than "60 days".
+   */
+  const [intervals, setIntervals] = useState<
+    Record<CareActionId, { value: string; unit: IntervalUnit }>
+  >(() =>
+    Object.fromEntries(
+      CARE_ACTIONS.map((action) => {
+        const days = plant?.care[action].intervalDays ?? DEFAULT_INTERVAL_DAYS;
+        const unit = bestUnitFor(days);
+        return [action, { value: String(daysToUnit(days, unit)), unit }];
+      }),
+    ) as Record<CareActionId, { value: string; unit: IntervalUnit }>,
   );
+
+  function setInterval(
+    action: CareActionId,
+    patch: Partial<{ value: string; unit: IntervalUnit }>,
+  ) {
+    setIntervals((current) => ({
+      ...current,
+      [action]: { ...current[action], ...patch },
+    }));
+  }
 
   useEffect(() => {
     // showModal(), not the `open` attribute — the attribute alone renders a
@@ -84,10 +109,13 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
       name: trimmed,
       description,
       roomId,
+      // Always stored in days, whatever unit was used to type it.
       intervals: Object.fromEntries(
         CARE_ACTIONS.map((action) => [
           action,
-          clampInterval(Number(intervalText[action])),
+          clampInterval(
+            unitToDays(Number(intervals[action].value), intervals[action].unit),
+          ),
         ]),
       ) as Record<CareActionId, number>,
     });
@@ -164,39 +192,62 @@ export default function PlantFormDialog({ plant, onSave, onClose }: Props) {
         <fieldset className="mt-4 border-0 p-0">
           <legend className="text-sm font-medium">How often?</legend>
           <p className="mt-0.5 text-xs text-muted">
-            Days between each action.
+            How long between each action. Months count as 30 days and years as
+            365.
           </p>
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {/* One column even on wide screens: a number plus a unit select is
+              too wide to sit two-up without cramping. */}
+          <div className="mt-2 grid grid-cols-1 gap-2">
             {CARE_ACTIONS.map((action) => {
               const meta = CARE_ACTION_META[action];
+              const inputId = `${intervalBaseId}-${action}`;
+              const { value, unit } = intervals[action];
               return (
-                <label
+                /* A div, not a label: two controls in one label makes the
+                   click target ambiguous, so the label points at the number
+                   and the select carries its own aria-label. */
+                <div
                   key={action}
                   className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-border-subtle px-3 py-1.5"
                 >
-                  <span className="flex min-w-0 items-center gap-2 text-sm">
+                  <label
+                    htmlFor={inputId}
+                    className="flex min-w-0 items-center gap-2 text-sm"
+                  >
                     <span aria-hidden="true">{meta.emoji}</span>
                     <span className="truncate">{meta.label}</span>
-                  </span>
+                  </label>
                   <span className="flex shrink-0 items-center gap-1">
                     <input
+                      id={inputId}
                       type="number"
                       inputMode="numeric"
                       min={MIN_INTERVAL_DAYS}
-                      max={MAX_INTERVAL_DAYS}
-                      value={intervalText[action]}
+                      max={maxValueForUnit(unit)}
+                      value={value}
                       onChange={(event) =>
-                        setIntervalText((current) => ({
-                          ...current,
-                          [action]: event.target.value,
-                        }))
+                        setInterval(action, { value: event.target.value })
                       }
-                      aria-label={`${meta.label} every N days`}
-                      className="w-14 rounded-md border border-border-subtle bg-background px-2 py-1 text-center text-base tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-status-soon"
+                      className="w-16 rounded-md border border-border-subtle bg-background px-2 py-1 text-center text-base tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-status-soon"
                     />
-                    <span className="text-xs text-muted">days</span>
+                    <select
+                      value={unit}
+                      onChange={(event) =>
+                        setInterval(action, {
+                          unit: event.target.value as IntervalUnit,
+                        })
+                      }
+                      aria-label={`${meta.label} interval unit`}
+                      className="rounded-md border border-border-subtle bg-background px-1 py-1 text-base outline-none focus-visible:ring-2 focus-visible:ring-status-soon"
+                    >
+                      {INTERVAL_UNITS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
                   </span>
-                </label>
+                </div>
               );
             })}
           </div>
