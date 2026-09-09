@@ -1,3 +1,10 @@
+<!--
+  My Plants: a houseplant care tracker. Records the plants you own, groups
+  them by the room they live in, and tracks when each one was last watered,
+  fertilized, pruned and repotted so it can tell you what is due or overdue.
+  Runs entirely in the browser; everything is stored in localStorage.
+-->
+
 # My Plants
 
 A single-user houseplant care tracker. Add your plants, group them by room, and
