@@ -123,6 +123,16 @@ function mapPlant(
   if (changed) commit(next);
 }
 
+export interface MergeResult {
+  plantsAdded: number;
+  roomsAdded: number;
+}
+
+/** Room names match on trimmed, case-insensitive equality. */
+function roomKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
 export interface PlantsActions {
   addPlant(input: {
     name: string;
@@ -156,6 +166,16 @@ export interface PlantsActions {
   markCareDone(id: string, action: CareActionId): void;
   clearCareDone(id: string, action: CareActionId): void;
   setCareInterval(id: string, action: CareActionId, days: number): void;
+  /**
+   * Adds an imported document to what is already here. Never removes or
+   * overwrites an existing plant or room.
+   */
+  mergeIn(document: PlantsDocument): MergeResult;
+  /**
+   * Discards everything stored and installs the imported document in its
+   * place. Destructive and irreversible — only ever call it behind an explicit
+   * choice that spells out what is lost.
+   */
   replaceAll(document: PlantsDocument): void;
   dismissError(): void;
 }
@@ -323,6 +343,61 @@ const actionsImpl: PlantsActions = {
 
   replaceAll(document) {
     commit(document.plants, document.rooms);
+  },
+
+  mergeIn(document) {
+    const rooms = [...snapshot.rooms];
+    const usedRoomIds = new Set(rooms.map((room) => room.id));
+    // Rooms are matched by name so an imported "Kitchen" lands in the Kitchen
+    // that already exists, rather than creating a second one beside it.
+    const roomsByName = new Map(
+      rooms.map((room) => [roomKey(room.name), room.id]),
+    );
+    // Imported roomIds mean nothing here until they are translated to the ids
+    // this browser actually uses.
+    const roomIdMap = new Map<string, string>();
+
+    for (const incoming of document.rooms) {
+      const existingId = roomsByName.get(roomKey(incoming.name));
+      if (existingId !== undefined) {
+        roomIdMap.set(incoming.id, existingId);
+        continue;
+      }
+      // Past the cap the room is dropped and its plants arrive unassigned,
+      // which is recoverable; silently exceeding the cap is not.
+      if (rooms.length >= MAX_ROOMS) continue;
+
+      const id = usedRoomIds.has(incoming.id) ? newId() : incoming.id;
+      usedRoomIds.add(id);
+      rooms.push({ id, name: incoming.name });
+      roomsByName.set(roomKey(incoming.name), id);
+      roomIdMap.set(incoming.id, id);
+    }
+
+    const usedPlantIds = new Set(snapshot.plants.map((plant) => plant.id));
+    const added: Plant[] = [];
+
+    for (const incoming of document.plants) {
+      // A colliding id means this plant is already here, so the incoming one
+      // is given a fresh id and kept alongside rather than replacing it.
+      const id = usedPlantIds.has(incoming.id) ? newId() : incoming.id;
+      usedPlantIds.add(id);
+      added.push({
+        ...incoming,
+        id,
+        roomId:
+          incoming.roomId === null
+            ? null
+            : (roomIdMap.get(incoming.roomId) ?? null),
+      });
+    }
+
+    commit([...snapshot.plants, ...added], rooms);
+
+    return {
+      plantsAdded: added.length,
+      roomsAdded: rooms.length - snapshot.rooms.length,
+    };
   },
 
   dismissError() {
