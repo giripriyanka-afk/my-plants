@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import CareBadge from "@/components/CareBadge";
 import { computeCareStatus } from "@/lib/care";

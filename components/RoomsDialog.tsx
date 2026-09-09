@@ -1,10 +1,27 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useId, useRef, useState } from "react";
 
 import { usePlants } from "@/hooks/usePlants";
 import { MAX_ROOM_NAME_LENGTH, MAX_ROOMS } from "@/lib/constants";
 import type { Plant, Room } from "@/types/plant";
+
+function ArrowIcon({ direction }: { direction: "up" | "down" }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      className={`size-4 ${direction === "down" ? "rotate-180" : ""}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 13.5V2.5M3.5 7 8 2.5 12.5 7" />
+    </svg>
+  );
+}
 
 /**
  * Add, rename, reorder and delete rooms. Every action commits immediately —
@@ -142,18 +159,18 @@ function RoomRow({
           onClick={() => actions.moveRoom(room.id, -1)}
           disabled={index === 0}
           aria-label={`Move ${room.name} up`}
-          className="size-11 shrink-0 rounded-lg hover:bg-surface-muted disabled:opacity-30 sm:size-9"
+          className="grid size-11 shrink-0 place-items-center rounded-lg hover:bg-surface-muted disabled:opacity-30 sm:size-9"
         >
-          â†‘
+          <ArrowIcon direction="up" />
         </button>
         <button
           type="button"
           onClick={() => actions.moveRoom(room.id, 1)}
           disabled={index === total - 1}
           aria-label={`Move ${room.name} down`}
-          className="size-11 shrink-0 rounded-lg hover:bg-surface-muted disabled:opacity-30 sm:size-9"
+          className="grid size-11 shrink-0 place-items-center rounded-lg hover:bg-surface-muted disabled:opacity-30 sm:size-9"
         >
-          â†“
+          <ArrowIcon direction="down" />
         </button>
         <button
           type="button"
