@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
+import BackupSection from "@/components/BackupSection";
+import Banner from "@/components/Banner";
 import ConfirmDeleteDialog from "@/components/ConfirmDeleteDialog";
 import PlantCard from "@/components/PlantCard";
 import PlantFormDialog from "@/components/PlantFormDialog";
@@ -9,19 +11,16 @@ import RoomsDialog from "@/components/RoomsDialog";
 import { usePlants } from "@/hooks/usePlants";
 import { useToday } from "@/hooks/useToday";
 import { groupPlantsByRoom } from "@/lib/rooms";
-import {
-  buildExportPayload,
-  downloadJson,
-  suggestedExportFilename,
-} from "@/lib/transfer";
-import { parsePlantsFile } from "@/lib/validate";
 import type { Plant } from "@/types/plant";
 
-// Wide cards: each care row has to hold emoji, label, badge, interval and
-// button on one line, which a three-up grid cannot give it.
-// items-start matters: without it a row stretches every card to match the
-// tallest, so one expanded card leaves its neighbour with a column of blank
-// space below the Care toggle.
+/**
+ * Two columns at most, never three: a care row has to hold emoji, label, badge,
+ * interval and button on one line, which a three-up card is too narrow for.
+ *
+ * items-start stops a row stretching every card to match its tallest sibling,
+ * which would leave a collapsed card with a column of blank space beside an
+ * expanded one.
+ */
 const CARD_GRID = "grid grid-cols-1 items-start gap-4 xl:grid-cols-2";
 
 /**
@@ -30,7 +29,6 @@ const CARD_GRID = "grid grid-cols-1 items-start gap-4 xl:grid-cols-2";
  */
 export default function PlantsApp() {
   const { snapshot, actions } = usePlants();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Plant | null>(null);
@@ -41,34 +39,6 @@ export default function PlantsApp() {
   // Only read once hydration has produced real data, so no date crosses the
   // hydration boundary.
   const today = useToday();
-
-  function handleExport() {
-    downloadJson(
-      buildExportPayload(snapshot.plants, snapshot.rooms),
-      suggestedExportFilename(),
-    );
-  }
-
-  async function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    // Reset immediately so picking the same file twice fires `change` again.
-    event.target.value = "";
-    if (!file) return;
-
-    const result = parsePlantsFile(await file.text());
-    if (!result.ok) {
-      setNotice(result.error);
-      return;
-    }
-    const count = result.value.plants.length;
-    const confirmed = window.confirm(
-      `Import ${count} ${count === 1 ? "plant" : "plants"}?\n\nThis replaces all ${snapshot.plants.length} plants currently in the app. Export a backup first if you want to keep them.`,
-    );
-    if (!confirmed) return;
-
-    actions.replaceAll(result.value);
-    setNotice(`Imported ${count} ${count === 1 ? "plant" : "plants"}.`);
-  }
 
   const isHydrating = snapshot.status === "hydrating";
   const groups = isHydrating
@@ -82,7 +52,7 @@ export default function PlantsApp() {
           <h1 className="text-2xl font-bold">My Plants</h1>
           <p className="text-sm text-muted">
             {isHydrating
-              ? " "
+              ? " "
               : `${snapshot.plants.length} ${snapshot.plants.length === 1 ? "plant" : "plants"} in your home. Keep'em thriving!`}
           </p>
         </div>
@@ -111,37 +81,23 @@ export default function PlantsApp() {
       </header>
 
       {snapshot.persistence === "unavailable" && (
-        <p className="mt-4 rounded-lg bg-status-due-bg px-3 py-2 text-sm text-status-due">
+        <Banner tone="warning">
           Changes aren&apos;t being saved — this browser is blocking local
           storage. The app still works, but your plants will disappear when you
           close the tab.
-        </p>
+        </Banner>
       )}
 
       {snapshot.lastError && (
-        <p className="mt-4 flex items-start gap-2 rounded-lg bg-status-overdue-bg px-3 py-2 text-sm text-status-overdue">
-          <span className="flex-1">{snapshot.lastError}</span>
-          <button
-            type="button"
-            onClick={actions.dismissError}
-            className="font-semibold underline"
-          >
-            Dismiss
-          </button>
-        </p>
+        <Banner tone="error" onDismiss={actions.dismissError}>
+          {snapshot.lastError}
+        </Banner>
       )}
 
       {notice && (
-        <p className="mt-4 flex items-start gap-2 rounded-lg bg-status-soon-bg px-3 py-2 text-sm text-status-soon">
-          <span className="flex-1">{notice}</span>
-          <button
-            type="button"
-            onClick={() => setNotice(null)}
-            className="font-semibold underline"
-          >
-            Dismiss
-          </button>
-        </p>
+        <Banner tone="info" onDismiss={() => setNotice(null)}>
+          {notice}
+        </Banner>
       )}
 
       {isHydrating ? (
@@ -186,43 +142,7 @@ export default function PlantsApp() {
         ))
       )}
 
-      {/* Backup lives at the foot of the page: occasional maintenance, not a
-          per-visit action, so it shouldn't compete with Add plant. This is also
-          the natural place to say where the data actually lives, which the
-          header subtitle used to carry. */}
-      <footer className="mt-12 border-t border-border-subtle pt-6">
-        <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">
-          Backup
-        </h2>
-        <p className="mt-1 max-w-prose text-sm text-muted">
-          Your plants are saved in this browser only. Export a copy to keep a
-          backup, or to move them to another device.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={snapshot.plants.length === 0}
-            className="min-h-11 rounded-lg border border-border-subtle px-3 text-sm font-medium hover:bg-surface-muted disabled:opacity-40"
-          >
-            Export
-          </button>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="min-h-11 rounded-lg border border-border-subtle px-3 text-sm font-medium hover:bg-surface-muted"
-          >
-            Import
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            onChange={handleImportFile}
-            className="hidden"
-          />
-        </div>
-      </footer>
+      <BackupSection onNotice={setNotice} />
 
       {formOpen && (
         <PlantFormDialog
