@@ -47,13 +47,19 @@ export default function PlantsApp() {
 
   return (
     <>
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">My Plants</h1>
-          <p className="text-sm text-muted">
-            {isHydrating
-              ? " "
-              : `${snapshot.plants.length} ${snapshot.plants.length === 1 ? "plant" : "plants"} in your home. Keep'em thriving!`}
+          <h1 className="display-xl">
+            {isHydrating ? (
+              // Same height as the rendered text, so the count arriving after
+              // hydration moves nothing below it.
+              <span className="inline-block h-[0.95em] w-52 max-w-full animate-pulse rounded bg-surface-muted align-baseline" />
+            ) : (
+              `${snapshot.plants.length} ${snapshot.plants.length === 1 ? "plant" : "plants"}`
+            )}
+          </h1>
+          <p className="mt-2.5 text-base text-muted">
+            in your home. Keep&apos;em thriving!
           </p>
         </div>
 
@@ -63,7 +69,7 @@ export default function PlantsApp() {
           <button
             type="button"
             onClick={() => setRoomsOpen(true)}
-            className="min-h-11 rounded-lg border border-border-subtle px-3 text-sm font-medium hover:bg-surface-muted"
+            className="min-h-11 rounded-lg border-2 border-border-subtle px-4 text-sm font-semibold hover:border-muted hover:bg-surface-muted"
           >
             Rooms
           </button>
@@ -73,7 +79,7 @@ export default function PlantsApp() {
               setEditing(null);
               setFormOpen(true);
             }}
-            className="min-h-11 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-foreground"
+            className="min-h-11 rounded-lg bg-accent px-5 text-sm font-bold text-accent-foreground hover:bg-nav"
           >
             Add plant
           </button>
@@ -106,8 +112,8 @@ export default function PlantsApp() {
           <div className="h-56 animate-pulse rounded-xl bg-surface-muted" />
         </div>
       ) : groups.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-dashed border-border-subtle p-10 text-center">
-          <p className="text-lg font-medium">No plants yet</p>
+        <div className="mt-10 rounded-xl border-2 border-dashed border-border-subtle p-10 text-center">
+          <p className="text-xl font-bold tracking-tight">No plants yet</p>
           <p className="mt-1 text-sm text-muted">
             Add your first plant to start tracking watering, fertilizing,
             pruning and repotting.
@@ -118,11 +124,16 @@ export default function PlantsApp() {
         // Empty rooms are dropped — a heading with nothing under it is noise.
         groups.map(({ room, plants }) => (
           <section key={room?.id ?? "unassigned"} className="mt-8">
-            <h2 className="flex items-baseline gap-2 text-sm font-semibold tracking-wide text-muted uppercase">
-              {room?.name ?? "Unassigned"}
-              <span className="text-xs font-normal normal-case tabular-nums">
+            <h2 className="flex items-center gap-3">
+              <span className="text-lg font-bold tracking-tight">
+                {room?.name ?? "Unassigned"}
+              </span>
+              <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-semibold text-muted tabular-nums">
                 {plants.length}
               </span>
+              {/* The rule is the grouping made visible: it runs from the name
+                  to the edge of the cards that belong to it. */}
+              <span aria-hidden="true" className="h-px flex-1 bg-border-subtle" />
             </h2>
             <div className={`${CARD_GRID} mt-3`}>
               {plants.map((plant) => (

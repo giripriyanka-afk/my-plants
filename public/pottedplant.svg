@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 300" width="240" height="300">
+  <!--
+    A whole houseplant in a pot, used as a CSS mask.
+
+    Five blades fanning from a single point just above the rim, longest in the
+    middle. Rotating each leaf about its own base is what gives the fan its
+    growth habit — leaves placed and then rotated in isolation splay evenly and
+    read as a decorative motif rather than a plant.
+
+    The pot is allowed straight sides: it is a manufactured object, and reading
+    as geometry is correct for it. The blades are all curves.
+  -->
+  <defs>
+    <!-- Blade with its base at the origin and its tip at 0,-104, so a rotation
+         about the origin pivots it at the soil line. -->
+    <path id="blade" d="M0 0
+                        C16 -22 24 -50 20 -72
+                        C17 -88 8 -98 0 -104
+                        C-8 -98 -17 -88 -20 -72
+                        C-24 -50 -16 -22 0 0 Z"/>
+  </defs>
+
+  <g fill="#000">
+    <use href="#blade" transform="translate(120 194) rotate(-52) scale(0.85)"/>
+    <use href="#blade" transform="translate(120 194) rotate(-27)"/>
+    <use href="#blade" transform="translate(120 194) rotate(-4) scale(1.1)"/>
+    <use href="#blade" transform="translate(120 194) rotate(21)"/>
+    <use href="#blade" transform="translate(120 194) rotate(45) scale(0.82)"/>
+
+    <!-- Rim, then the tapered body. -->
+    <path d="M54 196 C54 192 57 190 61 190 L179 190 C183 190 186 192 186 196
+             L182 214 L58 214 Z"/>
+    <path d="M62 214 L178 214 L167 288 C166 294 161 298 155 298
+             L85 298 C79 298 74 294 73 288 Z"/>
+  </g>
+</svg>
