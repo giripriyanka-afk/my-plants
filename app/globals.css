@@ -4,21 +4,30 @@
   color-scheme: light;
 
   /* Light: warm off-white with a green cast, charcoal text, moss accent. */
-  --background: #f6f8f3;
-  --foreground: #242b26;
-  --surface: #fdfefc;
-  --surface-muted: #ebf0e5;
-  --border: #d7dfcf;
-  --muted: #66735f;
+  --background: #f1f5ea;
+  --foreground: #19231b;
+  --surface: #fdfefb;
+  --surface-muted: #e6ece0;
+  --border: #cfdac3;
+  --muted: #5d6b57;
 
   /* Moss green carries the primary actions. It is a separate token from
      --foreground so text stays charcoal while buttons read green. */
-  --accent: #52703f;
-  --accent-foreground: #f6f8f3;
+  --accent: #2f5d33;
+  --accent-foreground: #f4f8ee;
 
-  /* The monstera backdrop. Alpha is deliberately tiny — it has to sit under
+  /* The navigation band. It is the one large field of saturated colour on the
+     page, so it gets its own tokens rather than borrowing --accent: a band has
+     to sit darker than a button, to hold light text well clear of 7:1 across a
+     whole strip rather than a few words. */
+  --nav: #1f3f24;
+  --nav-foreground: #eef4e7;
+  --nav-muted: #a8c2a2;
+  --nav-edge: #4c8248;
+
+  /* The plant backdrop. Alpha is deliberately tiny — it has to sit under
      body text without touching contrast. */
-  --leaf: rgb(82 112 63 / 0.09);
+  --leaf: rgb(47 93 51 / 0.075);
 
   --status-overdue: #a3341f;
   --status-overdue-bg: #fbeeea;
@@ -34,17 +43,22 @@
   /* Dark palette values live here, once. Two different selectors have to apply
      them (see below), and defining the hexes in a single place means a colour
      is only ever edited in one spot. */
-  --dark-background: #151815;
-  --dark-foreground: #e4e9df;
-  --dark-surface: #1e231e;
-  --dark-surface-muted: #272d26;
-  --dark-border: #363d34;
-  --dark-muted: #9aa694;
+  --dark-background: #131711;
+  --dark-foreground: #e6ecdf;
+  --dark-surface: #1c2119;
+  --dark-surface-muted: #262d22;
+  --dark-border: #38412f;
+  --dark-muted: #9bab92;
 
-  --dark-accent: #8fb572;
-  --dark-accent-foreground: #151815;
+  --dark-accent: #93c473;
+  --dark-accent-foreground: #131711;
 
-  --dark-leaf: rgb(143 181 114 / 0.07);
+  --dark-nav: #1d3521;
+  --dark-nav-foreground: #e6ecdf;
+  --dark-nav-muted: #92a88b;
+  --dark-nav-edge: #4a7a45;
+
+  --dark-leaf: rgb(147 196 115 / 0.065);
 
   --dark-status-overdue: #f2a196;
   --dark-status-overdue-bg: #3a1a14;
@@ -67,6 +81,10 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-nav: var(--nav);
+  --color-nav-foreground: var(--nav-foreground);
+  --color-nav-muted: var(--nav-muted);
+  --color-nav-edge: var(--nav-edge);
 
   --color-status-overdue: var(--status-overdue);
   --color-status-overdue-bg: var(--status-overdue-bg);
@@ -106,6 +124,10 @@
     --muted: var(--dark-muted);
     --accent: var(--dark-accent);
     --accent-foreground: var(--dark-accent-foreground);
+    --nav: var(--dark-nav);
+    --nav-foreground: var(--dark-nav-foreground);
+    --nav-muted: var(--dark-nav-muted);
+    --nav-edge: var(--dark-nav-edge);
     --leaf: var(--dark-leaf);
 
     --status-overdue: var(--dark-status-overdue);
@@ -132,6 +154,10 @@
   --muted: var(--dark-muted);
   --accent: var(--dark-accent);
   --accent-foreground: var(--dark-accent-foreground);
+  --nav: var(--dark-nav);
+  --nav-foreground: var(--dark-nav-foreground);
+  --nav-muted: var(--dark-nav-muted);
+  --nav-edge: var(--dark-nav-edge);
   --leaf: var(--dark-leaf);
 
   --status-overdue: var(--dark-status-overdue);
@@ -195,11 +221,43 @@ body {
 }
 
 /*
- * Monstera backdrop: two oversized leaves bleeding off opposite corners.
+ * Display type for the one headline that carries the page.
  *
- * The SVG is used as a mask rather than an <img>, with --leaf as the fill, so
- * one file serves both themes and the colour follows the palette instead of
- * being baked in. fixed + pointer-events:none + z-index:-1 keeps it out of the
+ * The size is a clamp rather than Tailwind's steps because a headline this
+ * large should track the viewport continuously; stepping at breakpoints shows
+ * as a jump when you resize. The negative tracking is what stops a heavy weight
+ * reading as shouting — at 800 the default letter spacing looks loose, as
+ * though the weight were an accident.
+ */
+.display-xl {
+  font-size: clamp(2.25rem, 6vw, 3.5rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+}
+
+.wordmark {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+
+/*
+ * The backdrop: a pothos trailing from the top left, a potted plant standing
+ * at the bottom right.
+ *
+ * Two different masks, not one shape mirrored. A single silhouette repeated in
+ * opposite corners reads as a pattern; a hanging plant and a floor plant read
+ * as a room, which is what the app is about.
+ *
+ * It replaced a single monstera leaf, whose eight lobes and six fenestrations
+ * broke into a dozen small pale shapes at this opacity — behind the cards that
+ * was mottling rather than foliage. A vine avoids the problem by construction:
+ * it is a line along the page margin instead of a mass behind the content.
+ *
+ * The SVGs are used as masks rather than <img>, with --leaf as the fill, so one
+ * file serves both themes and the colour follows the palette instead of being
+ * baked in. fixed + pointer-events:none + z-index:-1 keeps them out of the
  * layout and out of every hit test.
  */
 body::before,
@@ -209,41 +267,61 @@ body::after {
   z-index: -1;
   pointer-events: none;
   background-color: var(--leaf);
-  -webkit-mask-image: url("/monstera.svg");
-  mask-image: url("/monstera.svg");
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-size: contain;
   mask-size: contain;
 }
 
-/* Pulled further onto the page than before. The old placement showed mostly
-   the outer edges, which is exactly the part that carries no information about
-   what the shape is. Box ratios track the 200x250 viewBox. */
+/*
+ * The vine, sized to run the whole height of the viewport.
+ *
+ * Height is viewport-relative rather than a fixed rem value because the vine
+ * has to reach the bottom edge on any screen: stopping partway down leaves it
+ * hanging in empty space, which reads as cut off no matter how the end is
+ * drawn. Width follows from the 200x800 viewBox — mask-size: contain fits by
+ * the limiting dimension, so the box has to hold the same 1:4 ratio or the
+ * vine stops short of the bottom.
+ *
+ * Not rotated. A tall element rotated about its centre swings its ends
+ * sideways — at this height a few degrees would push the foot of the vine
+ * across into the cards. The meander is drawn into the stem instead.
+ */
 body::before {
-  top: -5rem;
-  right: -6rem;
-  width: 28rem;
-  height: 35rem;
-  rotate: 15deg;
+  top: -3rem;
+  left: -8rem;
+  height: calc(100vh + 6rem);
+  width: calc((100vh + 6rem) / 4);
+  -webkit-mask-image: url("/vine.svg");
+  mask-image: url("/vine.svg");
 }
 
+/* The floor plant. Ratio tracks its 240x300 viewBox. Deliberately unrotated:
+   a tilted pot reads as knocked over. */
 body::after {
-  bottom: -7rem;
-  left: -7rem;
-  width: 32rem;
-  height: 40rem;
-  rotate: -160deg;
+  bottom: -3rem;
+  right: -4rem;
+  width: 15rem;
+  height: 18.75rem;
+  -webkit-mask-image: url("/pottedplant.svg");
+  mask-image: url("/pottedplant.svg");
 }
 
 @media (min-width: 64rem) {
   body::before {
-    width: 34rem;
-    height: 42.5rem;
+    /* Fully on the page once the layout is wide enough: at 0 the leaves on
+       BOTH sides of the stem clear the viewport edge, where a negative offset
+       clipped the left-hand ones in half.
+
+       It lands close to the card grid on purpose. The vine's on-screen width
+       is a quarter of the viewport height, so on a very tall window its
+       outermost leaves pass behind the first card — acceptable for a backdrop,
+       and the alternative is clipping the left side again. */
+    left: 0;
   }
   body::after {
-    width: 40rem;
-    height: 50rem;
+    width: 26rem;
+    height: 32.5rem;
   }
 }
 

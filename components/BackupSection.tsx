@@ -90,8 +90,9 @@ export default function BackupSection({ onNotice }: Props) {
   return (
     <>
       <footer className="mt-12 border-t border-border-subtle pt-6">
-        <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">
-          Backup
+        <h2 className="flex items-center gap-3">
+          <span className="text-lg font-bold tracking-tight">Backup</span>
+          <span aria-hidden="true" className="h-px flex-1 bg-border-subtle" />
         </h2>
         <p className="mt-1 max-w-prose text-sm text-muted">
           Your plants are saved in this browser only. Export a copy to keep a

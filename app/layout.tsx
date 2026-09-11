@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 
-import ThemeToggle from "@/components/ThemeToggle";
+import SiteNav from "@/components/SiteNav";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
 
@@ -27,8 +26,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    // Matches --nav / --dark-nav, so the browser chrome continues the band.
+    { media: "(prefers-color-scheme: light)", color: "#1f3f24" },
+    { media: "(prefers-color-scheme: dark)", color: "#101710" },
   ],
 };
 
@@ -56,18 +56,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        {/* Site-level chrome: navigation and the theme switch together, on
-            every route. Both are app-wide concerns rather than list-page
+        {/* Site-level chrome: the wordmark, navigation and the theme switch,
+            on every route. All app-wide concerns rather than list-page
             actions, which is why they sit outside {children}. */}
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-end gap-1 px-4 pt-4 sm:px-6 lg:px-8">
-          <Link
-            href="/about"
-            className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted hover:bg-surface-muted hover:text-foreground"
-          >
-            About
-          </Link>
-          <ThemeToggle />
-        </div>
+        <SiteNav />
         {children}
       </body>
     </html>

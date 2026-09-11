@@ -4,7 +4,7 @@ import PlantsApp from "@/components/PlantsApp";
 // static and no plant data ever exists server-side.
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-6xl px-4 pt-10 pb-16 sm:px-6 lg:px-8">
       <PlantsApp />
     </main>
   );

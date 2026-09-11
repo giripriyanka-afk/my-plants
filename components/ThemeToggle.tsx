@@ -76,10 +76,10 @@ export default function ThemeToggle() {
       aria-checked={resolved === "dark"}
       aria-label="Dark mode"
       // min-h-11 gives the 44px tap target; the track inside is the visual.
-      className="inline-flex min-h-11 items-center rounded-lg px-1 outline-none focus-visible:ring-2 focus-visible:ring-status-soon"
+      className="inline-flex min-h-11 items-center rounded-lg px-1 outline-none focus-visible:ring-2 focus-visible:ring-nav-foreground"
     >
-      <span className="relative flex h-7 w-12 items-center rounded-full border border-border-subtle bg-surface-muted px-0.5">
-        <span className="theme-knob flex size-6 items-center justify-center rounded-full bg-foreground text-background transition-transform">
+      <span className="relative flex h-7 w-12 items-center rounded-full border border-nav-foreground/25 bg-nav-foreground/15 px-0.5">
+        <span className="theme-knob flex size-6 items-center justify-center rounded-full bg-nav-foreground text-nav transition-transform">
           <SunIcon />
           <MoonIcon />
         </span>
